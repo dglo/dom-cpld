@@ -408,6 +408,13 @@ begin
                         EBI_data_out <= Reg_8;              
                     end if;
                 end if;       
+
+          -- Register 9 (System control)
+          	    if Reg_enable = "1001"then
+                    if EBI_nWE = '0' then
+                        Reg_9(7 downto 0) <= EBI_data_in(7 downto 0);
+                    end if;
+                end if;       
                 
           -- Register 10 (ATWD Input Multiplexor Control)
           	    if Reg_enable = "1010"then
