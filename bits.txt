@@ -54,7 +54,8 @@ Reset: 00000000
 Bit	 Read/Write	Description
 
 0        R              FPGA_LOADED (low active)
-1-7	 R/W		Unassigned
+1	 R/W		HV_DISABLE
+2-7	 R/W		Unassigned
 
 Register 8
 
@@ -73,8 +74,8 @@ Bit	 Read/Write	Description
 0	 R/W		Base_On_Off
 1	 R/W		FL_ON_OFF, Flash A/B select
 2	 R/W		Barometer_enable
-3	 R/W		Unassigned
-4	 R/W		FL_UNDEFINED
+3	 R/W		Single_LED_ENABLE
+4	 R/W		FL_JTAGEN
 5-7	 R/W		Unassigned
 
 Register 10
@@ -129,7 +130,7 @@ Reset: 00000000
 Bit	 Read/Write	Description
 
 0-7	 R		read as zero's
-0	 W		enable reboot?
+0	 W		software reboot
 
 Register 15
 

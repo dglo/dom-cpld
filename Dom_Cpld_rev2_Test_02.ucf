@@ -23,7 +23,7 @@ NET "eba<5>" LOC = "S:PIN45";
 NET "init_done" LOC = "S:PIN28";
 NET "npor" LOC = "S:PIN17";
 NET "nreset" LOC = "S:PIN33";
-NET "nstatus" LOC = "S:PIN34";
+#NET "nstatus" LOC = "S:PIN34";
 NET "pld_clk" LOC = "S:PIN30";
 #NET "pld_mode" LOC = "S:PIN9";
 NET "ex_rts" LOC = "S:PIN96";
@@ -68,7 +68,7 @@ NET "fl_d<7>" LOC = "S:PIN132";
 NET "fl_noe" LOC = "S:PIN120";
 NET "fl_nwe" LOC = "S:PIN119";
 NET "fl_on_off" LOC = "S:PIN118";
-NET "fl_undefined" LOC = "S:PIN117";
+NET "fl_jtagen" LOC = "S:PIN117";
 NET "flash_ncs0" LOC = "S:PIN76";
 NET "flash_ncs1" LOC = "S:PIN77";
 NET "flash_noe" LOC = "S:PIN78";
@@ -109,6 +109,9 @@ NET "ex_txd" LOC = "S:PIN18";
 NET "eb_npor" LOC = "S:PIN95";
 NET "COMM_RESET" LOC = "S:PIN81";
 NET "FPGA_LOADED" LOC = "S:PIN75";
+NET "Single_LED_ENABLE" LOC = "S:PIN92";
+NET "BASE_HV_DISABLE" LOC = "S:PIN94";
 #PINLOCK_END
 NET "flash_noe" FAST;
 NET "flash_nwe" FAST;
+
