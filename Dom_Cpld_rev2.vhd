@@ -151,7 +151,7 @@ entity EB_Interface_rev2 is
         AUX_CLT                 : inout STD_LOGIC;      -- Register 10-d6       ( this is only one direction and depend on what ext device)     
         
         PLD_Mode                : in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
-        PLD_TP                  : inout STD_LOGIC       -- Last port of the Entity
+        PLD_TP                  : in STD_LOGIC       -- Last port of the Entity
         
 
 --              Reset                   : in STD_LOGIC                          
@@ -222,7 +222,7 @@ begin
 
 --************************** Bi-directional EB Data Bus *****************************
 
-        PLD_TP <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-4-03 C.Vu
+    -- no longer used as testpoint TS 10/30/03    PLD_TP <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-4-03 C.Vu
         nPOR <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-5-03 C.Vu
 
         EBD   <= EBD_out      when (EB_nOE = '0' and EB_nCS(2)= '0')
@@ -335,7 +335,7 @@ begin
         Flash_nCS1      <= '0'  when ((not EB_nCS(0) and EB_nCS(1) and Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and not Reg_15(0) ) ='1')
           else    '1' ;
         
-        Boot_Flash     <=       Reg_15(1) or (not PLD_Mode) ;   -- Register 15-d1     
+        Boot_Flash     <=       Reg_15(1) or (not PLD_TP) ;   -- Register 15-d1     
 --      nConfig         <= '0'  when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';  -- Register 15-d3
 --      nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
 
@@ -566,7 +566,7 @@ begin
                              
              Reg_14          			<= "00000000";
              
-             Reg_15 (1 downto 0)    <= "10";                     
+             Reg_15 (1 downto 0)    <= "00";  -- changed to boot from config as default                   
 	--              Reg_15 (7 downto 4)     <= "0000" ;
                                         
         -- Synchronize with falling edge of clock
