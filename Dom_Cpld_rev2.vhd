@@ -149,9 +149,9 @@ entity EB_Interface_rev2 is
         AUX_CLT                 : inout STD_LOGIC;      -- Register 10-d6       ( this is only one direction and depend on what ext device)     
         
         --PLD_Mode                : in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
+        Single_LED_ENABLE : out STD_LOGIC;
         PLD_TP                  : in STD_LOGIC       -- Last port of the Entity
 
-        Single_LED_ENABLE : out STD_LOGIC;
 
 --              Reset                   : in STD_LOGIC                          
     );
