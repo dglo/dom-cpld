@@ -193,7 +193,7 @@ begin
 		else 			(others => 'Z');
 
 	EBD_in <= EBD 	when (EB_nWE = '0' and EB_nCS(2)= '0') else "00000000";
-	FL_D  		<= EBD 	when (EB_nWE = '0' and EB_nCS(3)= '0') else "00000000";
+	FL_D  		<= EBD 	when (EB_nWE = '0' and EB_nCS(3)= '0') else "ZZZZZZZZ";
 	
 	FL_A  <= EBA 		when (Reg_9(1) ='1' and EB_nCS(3)= '0') 
 		else 	"000000"	 	when (Reg_9(1) ='1' and EB_nCS(3)= '1')
