@@ -158,7 +158,6 @@ entity EB_Interface_rev2 is
     BASE_HV_DISABLE   : out std_logic;
     PLD_TP            : in  std_logic   -- Last port of the Entity
 
-
 -- Reset : in STD_LOGIC
     );
 end EB_Interface_rev2;
@@ -212,6 +211,9 @@ architecture EB_Interface_rev2_arch of EB_Interface_rev2 is
 
   signal nPOR_flag, nCONFIG_flag, nRESET_flag, reg15enable, nCOMM_RESET_flag : std_logic;
 
+  -- when we start rebooting
+  signal rebooting_flag : std_logic;
+  
 --**************************** Start ***************************************
 begin
 
@@ -222,7 +224,7 @@ begin
       vsn => vsn);
 
 
---************************** Bi-directional EB Data Bus *****************************
+--************************** Bi-directional EB Data Bus *******************
 
   EBD <= EBD_out     when (EB_nOE = '0' and EB_nCS(2) = '0')
            else FL_D when (EB_nOE = '0' and EB_nCS(3) = '0' and Reg_9(1) = '1')
@@ -337,13 +339,13 @@ begin
                      else '1';
 
   Boot_Flash <= Reg_15(1) or (not PLD_TP);  -- Register 15-d1     
-  nConfig    <= '0' when ( SW_reboot = '1' or COMM_RESET = '0') else 'Z';
+  nConfig    <= '0' when ( SW_reboot = '1') else 'Z';
   Reset      <= nPOR;
 
   Int_Ext_pin_n <= '1';
 
 
---************************** EB Address Decode ***********************************
+--************************** EB Address Decode **************************
 -- This process decodes the address and sets enables for the registers
   address_decode : process (reset, EB_Clk)
   begin
@@ -359,26 +361,21 @@ begin
     end if;
   end process;
 
---************************** nCONFIG pulse width ***********************************
+--************************** nCONFIG pulse width ************************
 -- This process to setup the nCONFIG pulse
   nCONFIG_pulse : process (reset, PLD_Clk)
   begin
     if reset = RESET_ACTIVE then
+      rebooting_flag <= '0';
       Reg_15(3)   <= '1';
--- Reg_enable <= "0000";
       -- Synchronize with rising edge of PLD clock
     elsif PLD_Clk'event and (PLD_Clk = '1') then
--- if (Reg_15(1) and (Reg_14(0) or not soft_reset)) = '1' then  -- Recheck operation feb-19-03
---              Reg_15(3) <= '0';
---         elsif count = 15 then
---              Reg_15(3) <= '1';
---          end if; 
-      if count = 15 then                -- changed April-16-03
+      if count = 15 then
         Reg_15(3) <= '1';
--- elsif (Reg_15(1) and (Reg_14(0) or not soft_reset)) = '1' then
-      elsif (Reg_14(0) or not soft_reset) = '1' then
+        rebooting_flag <= '0';
+      elsif (Reg_14(0) or not soft_reset) = '1' or COMM_RESET = '0' then
         Reg_15(3) <= '0';
-        --     Reg_9(1) <= '0';         -- make sure the fl_on_off is off on reset
+        rebooting_flag <= '1';
       end if;
     end if;
   end process;
@@ -750,6 +747,11 @@ begin
       nCOMM_RESET_flag <= '1';
     end if;
 
+    if rebooting_flag = '1' then
+      reg_9(1) <= '0';                  -- when rebooting turn off flasher
+    end if;
+    
   end process;
 
 end EB_Interface_rev2_arch;
+

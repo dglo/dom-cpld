@@ -130,7 +130,7 @@ Reset: 00000000
 Bit	 Read/Write	Description
 
 0-7	 R		read as zero's
-0	 W		enable reboot?
+0	 W		software reboot
 
 Register 15
 
