@@ -62,7 +62,7 @@ entity EB_Interface_rev2 is
    Conf_Done    			: in STD_LOGIC; -- from CPU     to R15-d4       
    nRESET          		: in STD_LOGIC; -- from CPU     to R15-d6
    nSTATUS         		: in STD_LOGIC; -- from CPU to R15-d7
-   nPOR                 : inout STD_LOGIC; -- power on reset switch
+   nPOR                 : inout STD_LOGIC; --reg_14 power on reset switch
    soft_reset  			: in STD_LOGIC;  -- normal High, push to Low, OR with Reg_14(0) to force nCONFIG down 
           
 -- Barometer        
@@ -306,15 +306,16 @@ begin
         Flash_nWP               <=  '1'; -- Write Protection active low
         Flash_nOE               <=      EB_nOE;
         Flash_nWE               <=      EB_nWE;
-        Flash_nCS0      <=  '0'   when ((not EB_nCS(0) and EB_nCS(1) and not Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and Reg_15(0) ) ='1')
-         else    '1' ;
-        Flash_nCS1      <=  '0'   when ((not EB_nCS(0) and EB_nCS(1) and Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and not Reg_15(0) ) ='1')
-         else    '1' ;
+        Flash_nCS0      <= '0'  when ((not EB_nCS(0) and EB_nCS(1) and not Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and Reg_15(0) ) ='1')
+        	else     '1' ;
+        Flash_nCS1      <= '0'  when ((not EB_nCS(0) and EB_nCS(1) and Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and not Reg_15(0) ) ='1')
+          else    '1' ;
         
         Boot_Flash     <=       Reg_15(1) or (not PLD_Mode) ;   -- Register 15-d1     
 --      nConfig         <= '0'  when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';  -- Register 15-d3
-        nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
-   Reset                        <=      nPOR;
+--      nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
+       nConfig         <= '0'  when ( SW_reboot = '1' ) else 'Z';      -- Register 15-d3
+    Reset                        <=      nPOR;
 
    Int_Ext_pin_n  <=  '1';      
 
@@ -351,8 +352,9 @@ begin
 --          end if; 
    		if count = 15 then -- changed April-16-03
            Reg_15(3) <= '1';
-   		elsif (Reg_15(1) and  (Reg_14(0) or not soft_reset)) = '1' then
-           Reg_15(3) <= '0';
+--   		elsif (Reg_15(1) and  (Reg_14(0) or not soft_reset)) = '1' then
+   		elsif (Reg_14(0) or not soft_reset) = '1' then
+            Reg_15(3) <= '0';
    		end if;                                                           
     end if;        
 end process;             
