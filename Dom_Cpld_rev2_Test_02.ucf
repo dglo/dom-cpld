@@ -25,7 +25,7 @@ NET "npor" LOC = "S:PIN17";
 NET "nreset" LOC = "S:PIN33";
 NET "nstatus" LOC = "S:PIN34";
 NET "pld_clk" LOC = "S:PIN30";
-NET "pld_mode" LOC = "S:PIN9";
+#NET "pld_mode" LOC = "S:PIN9";
 NET "ex_rts" LOC = "S:PIN96";
 NET "ex_rxd" LOC = "S:PIN102";
 NET "sc_miso" LOC = "S:PIN10";
@@ -106,6 +106,9 @@ NET "sc_sclk" LOC = "S:PIN14";
 NET "sel_a0" LOC = "S:PIN140";
 NET "sel_a1" LOC = "S:PIN15";
 NET "ex_txd" LOC = "S:PIN18";
+NET "eb_npor" LOC = "S:PIN95";
+NET "COMM_RESET" LOC = "S:PIN81";
+NET "FPGA_LOADED" LOC = "S:PIN75";
 #PINLOCK_END
 NET "flash_noe" FAST;
 NET "flash_nwe" FAST;

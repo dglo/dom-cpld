@@ -64,7 +64,10 @@ entity EB_Interface_rev2 is
    nSTATUS         		: in STD_LOGIC; -- from CPU to R15-d7
    nPOR                 : inout STD_LOGIC; --reg_14 power on reset switch
    soft_reset  			: in STD_LOGIC;  -- normal High, push to Low, OR with Reg_14(0) to force nCONFIG down 
-          
+
+   FPGA_LOADED : in STD_LOGIC; -- pin 75, from CPU, is the fpga loaded? (active low)
+   COMM_RESET : in STD_LOGIC;  -- pin 81, from CPU, is there a comm reset? (active low)
+   
 -- Barometer        
    Barometer_Enable     : out STD_LOGIC;                -- Register 9-d2
          
@@ -96,8 +99,8 @@ entity EB_Interface_rev2 is
         SC_MOSI         : out STD_LOGIC;
                 
 -- ADC Signals ( ADC_Sclk = DAC_Sclk; ADC_Din = DAC_Din)        
-        SC_nCS5         : out STD_LOGIC;
-        SC_nCS6         : out STD_LOGIC;
+        SC_nCS5         : inout STD_LOGIC;
+        SC_nCS6         : inout STD_LOGIC;
         SC_MISO         : IN STD_LOGIC;   -- changed from OUT to IN on 1/30/03 C.Vu
         
 -- BASE (High Voltage) Signals        
@@ -139,12 +142,14 @@ entity EB_Interface_rev2 is
       FPGA_PLD_BUSY   : inout STD_LOGIC;
    FPGA_PLD_D         : inout STD_LOGIC_VECTOR (7 downto 0);
 
--- Other Signals 
+-- Other Signals
+
+	EB_nPOR	: OUT STD_LOGIC; 
         
         AUX_CLT                 : inout STD_LOGIC;      -- Register 10-d6       ( this is only one direction and depend on what ext device)     
         
-        PLD_Mode                : in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
-        PLD_TP                  : inout STD_LOGIC       -- Last port of the Entity
+        --PLD_Mode                : in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
+        PLD_TP                  : in STD_LOGIC       -- Last port of the Entity
         
 
 --              Reset                   : in STD_LOGIC                          
@@ -206,6 +211,8 @@ signal CPLD_Power_Up_nRESET_Done    		:std_logic;
 --**************************** Start ***************************************
 begin
 
+	EB_nPOR <= nPOR;
+
   inst_version : version
     port map (
       vsn => vsn);
@@ -213,7 +220,7 @@ begin
 
 --************************** Bi-directional EB Data Bus *****************************
 
-        PLD_TP <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-4-03 C.Vu
+    -- no longer used as testpoint TS 10/30/03    PLD_TP <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-4-03 C.Vu
         nPOR <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-5-03 C.Vu
 
         EBD   <= EBD_out      when (EB_nOE = '0' and EB_nCS(2)= '0')
@@ -276,12 +283,13 @@ begin
         SC_nCS2         <=      Reg_4 (2);
         SC_nCS3         <=      Reg_4 (3);
         SC_nCS4         <=      Reg_4 (4);
-        SC_nCS5         <=      Reg_4 (5);
-        SC_nCS6         <=      Reg_4 (6);
 
+        -- adc "chip selects" are open drain to support i2c...
+        SC_nCS5 <=  'Z' WHEN Reg_4(5)='1' ELSE '0';
+        SC_nCS6 <=  'Z' WHEN Reg_4(6)='1' ELSE '0';
         
-        BASE_nCS0               <=      Reg_5 (0);
-   BASE_nCS1            <=      Reg_5 (1);
+        BASE_nCS0       <=      Reg_5 (0);
+   	   BASE_nCS1       <=      Reg_5 (1);
 
         BASE_SClk       <=      Reg_6 (1);
         SC_SClk         <=      Reg_6 (1);              
@@ -295,8 +303,8 @@ begin
                 
 --      Base Signals
         
-        Mux_En0         <=      Reg_10 (0);     
-        Mux_En1         <=      Reg_10 (1);  
+        Mux_En0         <=      not Reg_10 (0);     
+        Mux_En1         <=      not Reg_10 (1);  
         Sel_A0          <=      Reg_10 (2);  
         Sel_A1          <=      Reg_10 (3); 
                 
@@ -325,10 +333,9 @@ begin
         Flash_nCS1      <= '0'  when ((not EB_nCS(0) and EB_nCS(1) and Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and not Reg_15(0) ) ='1')
           else    '1' ;
         
-        Boot_Flash     <=       Reg_15(1) or (not PLD_Mode) ;   -- Register 15-d1     
---      nConfig         <= '0'  when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';  -- Register 15-d3
---      nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
-       nConfig         <= '0'  when ( SW_reboot = '1' or FPGA_PLD_D(6) = '0' ) else 'Z';      -- Register 15-d3
+        Boot_Flash      <=       Reg_15(1) or (not PLD_TP) ;   -- Register 15-d1     
+        nConfig         <= '0'  when ( SW_reboot = '1' or COMM_RESET = '0') else 'Z';
+  
     Reset                        <=      nPOR;
 
    Int_Ext_pin_n  <=  '1';      
@@ -552,7 +559,7 @@ begin
                              
              Reg_14          			<= "00000000";
              
-             Reg_15 (1 downto 0)    <= "10";                     
+             Reg_15 (1 downto 0)    <= "00";  -- changed to boot from config as default                   
 	--              Reg_15 (7 downto 4)     <= "0000" ;
                                         
         -- Synchronize with falling edge of clock
@@ -598,11 +605,13 @@ begin
                         Reg_4      <=EBD_in;
                     else
                         -- uC read
-                        EBD_out(6 downto 0) <= Reg_4(6 downto 0);
+                        EBD_out(4 downto 0) <= Reg_4(4 downto 0);
+				    EBD_out(5) <= SC_nCS5;
+ 				    EBD_out(6) <= SC_nCS6;
                         EBD_out(7) <= SC_nCS7;
                     end if;
                 end if;
-                
+                				   
         -- Register 5
                 if Reg_enable = "0101"then
                     if EB_nWE = '0' then
@@ -634,10 +643,11 @@ begin
                  if Reg_enable = "0111"then
                     if EB_nWE = '0' then
                         -- uC write 
-                        Reg_7   <= EBD_in;              
+                        Reg_7 (7 downto 1)   <= EBD_in (7 downto 1);
                     else
                         -- uC read
-                        EBD_out <= Reg_7;              
+                        EBD_out (7 downto 1) <= Reg_7 (7 downto 1);
+                        EBD_out(0) <= FPGA_LOADED;
                     end if;
                 end if;
                 
