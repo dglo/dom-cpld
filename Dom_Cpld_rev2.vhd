@@ -214,6 +214,9 @@ architecture EB_Interface_rev2_arch of EB_Interface_rev2 is
   -- when we start rebooting
   signal rebooting_flag : std_logic;
   
+  -- signal for nCONFIG delay after nPOR
+  signal nCONFIG_nPOR_delay : std_logic;
+
 --**************************** Start ***************************************
 begin
 
@@ -339,10 +342,27 @@ begin
                      else '1';
 
   Boot_Flash <= Reg_15(1) or (not PLD_TP);  -- Register 15-d1     
-  nConfig    <= '0' when ( SW_reboot = '1') else 'Z';
+  nConfig    <= '0' when ( SW_reboot = '1' or nCONFIG_nPOR_delay = '1') else 'Z';
   Reset      <= nPOR;
 
   Int_Ext_pin_n <= '1';
+
+--************************** nCONFIG delay ******************************
+  process (reset, PLD_CLK)
+    variable nCONFIG_delay_cnt : integer range 0 to 255;
+  begin  -- process
+    if reset = RESET_ACTIVE then
+      nCONFIG_nPOR_delay   <= '1';
+      nCONFIG_delay_cnt   := 0;
+    elsif PLD_CLK'event and PLD_CLK = '1' then
+      if nCONFIG_delay_cnt < 255 then
+        nCONFIG_delay_cnt := nCONFIG_delay_cnt + 1;
+        nCONFIG_nPOR_delay <= '1';
+      else
+        nCONFIG_nPOR_delay <= '0';
+      end if;
+    end if;
+  end process;
 
 
 --************************** EB Address Decode **************************
