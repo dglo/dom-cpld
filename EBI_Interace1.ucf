@@ -1,5 +1,6 @@
 #PINLOCK_BEGIN
-#Wed Feb-5-2003
+#Wed Mar-7-2003
+# add pld_tp loc
 #PINLOCK_END
 NET "ps_up" LOC = "P7";
 NET "ps_down" LOC = "P9";
@@ -82,7 +83,7 @@ NET "ebi_data<3>" LOC = "P136";
 NET "temp_sensor_io" LOC = "P138";
 NET "temp_sensor_clk" LOC = "P140";
 NET "ebi_data<4>" LOC = "P143";
-
+NET "pld_tp" LOC = "P4";
 
 # NET "ebi_ncs<0>" PULLUP;
 # NET "ebi_ncs<3>" PULLUP;

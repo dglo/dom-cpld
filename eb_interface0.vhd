@@ -9,7 +9,8 @@
 -- to match API v0.2
 -- change temp_sensor Reg_8 to Reg_5, Reg_6, positions on Reg_6
 -- Change all Chip select lines to NOT inverting
---
+--					 Rev     :       4       Date: Mar-6-2003
+-- Add the one wire commands and processes using Reg 12 and port PLD_TP
 --
 --      Documentations used:    
 --              - Dom Schematics (V11.0)
@@ -71,8 +72,8 @@ entity EB_Interface0 is
         Flash_Reset     : out STD_LOGIC;        -- active low
         Flash_nWE       : out STD_LOGIC;        -- EBInWE
         Flash_nOE       : out STD_LOGIC;        -- EBI_nOE
-        Flash_nCS0      : out STD_LOGIC;        -- Register 15-d0
-        Flash_nCS1      : out STD_LOGIC;        -- Register 15-d0
+        Flash_nCS0      : buffer STD_LOGIC;        -- Register 15-d0
+        Flash_nCS1      : buffer STD_LOGIC;        -- Register 15-d0
         
 -- External PLL signals
         PLL_S0          : out STD_LOGIC;        -- Register 10-d4       
@@ -125,7 +126,7 @@ entity EB_Interface0 is
         CLK_24          : out STD_LOGIC;        -- ???
         Int_Ext_pin_n   : OUT STD_LOGIC;        -- ??? -- 1/30/03
         AUX_CLT         : inout STD_LOGIC;      -- Register 10-d6       ( this is only one direction and depend on what ext device)     
-        PLD_TP          : out STD_LOGIC;
+        PLD_TP          : inout STD_LOGIC;
                 
      nRESET             : in STD_LOGIC; -- ???
      nPOR               : in STD_LOGIC  -- Last port of the Entity
@@ -159,16 +160,19 @@ signal Reg_8            : std_logic_vector(7 downto 0);
 signal Reg_9            : std_logic_vector(7 downto 0);
 signal Reg_10           : std_logic_vector(7 downto 0);
 signal Reg_11           : std_logic_vector(7 downto 0);
-signal Reg_12           : std_logic_vector(7 downto 0);
+signal Reg_12           : std_logic_vector(7 downto 0); -- temporary use for one wire commands
 signal Reg_13           : std_logic_vector(7 downto 0);
 signal Reg_14           : std_logic_vector(7 downto 0); -- Reboot control register 
 signal Reg_15           : std_logic_vector(7 downto 0); -- Boot configuration register
 
 signal EBI_data_in      : std_logic_vector(7 downto 0); 
 signal EBI_data_out     : std_logic_vector(7 downto 0);
-signal Reset                    :std_logic;
-signal CPU_Reboot_Pulse         :std_logic;
-signal count                    : unsigned(3 downto 0);
+signal Reset            :std_logic;
+signal CPU_Reboot_Pulse :std_logic;
+signal count            : unsigned(3 downto 0);
+signal one_wire_counter : unsigned(15 downto 0);
+signal One_Wire_Count_Enable   :std_logic;
+
 
 --**************************** Start ***************************************
 begin
@@ -185,7 +189,9 @@ begin
 --      Reg_7(5)  <= ADC1_Data  when (Reg_7(6) = '0')  else '0';                
 ------
         Temp_Sensor_IO  <=  Reg_5(4)   when (Reg_5(4) = '0')  else 'Z';
-
+		  PLD_TP  <=  not Reg_12(7)   when (Reg_12(7) = '1')  else 'Z';
+--		  PLD_TP				<=  Reg_5(4); -- to observe the data being sent to Reg_5(4)
+															  
         AUX_CLT   		<=  Reg_10(7)  when (Reg_10(6) = '1')  else 'Z'; 	-- Write
         
         PLD_COM_DAC_D  <=  "ZZZZZZZZ" ; --  Add on 1/30/03 C.Vu
@@ -229,8 +235,14 @@ begin
                        
         Flash_nWP       <=  '1'; -- Write Protection active low
         Flash_Reset     <=  nRESET ; 
-        Flash_nOE       <=  EBI_nOE;
-        Flash_nWE       <=  EBI_nWE;
+--        Flash_nOE       <=  EBI_nOE;
+--        Flash_nWE       <=  EBI_nWE;
+		  Flash_nOE       <=  EBI_nOE when Flash_nCS0 ='0'
+		  	else EBI_nWE;
+
+		  Flash_nWE       <=  EBI_nWE when Flash_nCS0 ='0'
+		  	else EBI_nOE;
+
         Flash_nCS0      <=  '0'   when ((not EBI_nCS(0) and EBI_nCS(1) and not Reg_15(0) ) ='1') or ((EBI_nCS(0) and not EBI_nCS(1) and Reg_15(0) ) ='1')
          else    '1' ;
         Flash_nCS1      <=  '0'   when ((not EBI_nCS(0) and EBI_nCS(1) and Reg_15(0) ) ='1') or ((EBI_nCS(0) and not EBI_nCS(1) and not Reg_15(0) ) ='1')
@@ -293,6 +305,91 @@ begin
                 end if;                                           
     end if;        
 end process; 
+
+--************************** one wire cycle ***********************************
+-- This process extend the nCONFIG pulse
+one_wire_Cycle: process (reset, CPU_Clk)
+begin
+    if reset = RESET_ACTIVE then 
+               One_Wire_Count_Enable <= '0';      
+        -- Synchronize with falling edge of clock
+    elsif CPU_Clk'event and (CPU_Clk = '1') then
+                if Reg_12(3) = '1' then
+                        One_Wire_Count_Enable <= '1';
+					 elsif (count = 1200 and Reg_12(2 downto 0) < "111" ) then
+                        One_Wire_Count_Enable <= '0'; -- stop count when other command
+                elsif count = 19200 then
+                        One_Wire_Count_Enable <= '0';	-- stop count when Reset command
+                end if;                                           
+    end if;        
+end process;  
+--************************** one wire pulse width ***********************************
+-- This process extend the nCONFIG pulse
+one_wire_pulse: process (reset, CPU_Clk)
+begin
+    if reset = RESET_ACTIVE then 
+         Reg_12 (7 downto 6) <= "00"; 			      
+        -- Synchronize with rising edge of clock
+    elsif CPU_Clk'event and (CPU_Clk = '1') then
+    		if One_Wire_Count_Enable = '1' then   -- 
+				 	
+					if one_wire_counter = 1 then
+					 Reg_12(7) <= '1' ; -- send the '0' to PLD_TP
+					end if ;
+
+					case Reg_12(2 downto 0) is
+	   			 	when "001" => 		-- write 1 pulse
+	   					if one_wire_counter = 120 then
+								Reg_12(7) <= '0';
+							end if;
+						when "010" =>		-- write 0 pulse
+	   					if one_wire_counter = 1200 then
+								Reg_12(7) <= '0';
+							end if;
+						when "011" =>	   -- Read 1 bit pulse
+	   					if one_wire_counter = 120 then
+								Reg_12(7) <= '0';		--
+							end if;
+							if one_wire_counter = 300 then
+								Reg_12(6) <= PLD_TP;	-- sampling the data line @ 15us for data
+							end if;	
+						when "111" =>     -- Reset pulse
+	   					if one_wire_counter = 9600 then
+								Reg_12(7) <= '0';
+							end if;
+							if one_wire_counter = 11000 then
+								Reg_12(6) <= PLD_TP;	-- sampling the data line @ 550us for slave
+							end if;
+	   			   when others =>
+	   			     null;
+	   			end case;
+				  	
+					if one_wire_counter = 19200 then
+
+					end if ;
+							
+--         		Reg_12(7) <= '0';
+--         	elsif one_wire_counter = 19200 then
+--            	Reg_12(7) <= '1';
+--         	end if; 
+			end if;	                                          
+    end if;        
+end process; 
+--************************** one wire counter ***********************************
+-- This process provide the one wire pulse
+one_wire_count: process (reset, CPU_Clk)
+begin
+    if reset = RESET_ACTIVE then 
+               one_wire_counter <= "0000000000000000";       
+        -- Synchronize with falling edge of clock
+    elsif CPU_Clk'event and (CPU_Clk = '0') then
+                if One_Wire_Count_Enable = '1' then
+                        one_wire_counter <= one_wire_counter + 1;
+                else
+                        one_wire_counter <= "0000000000000000";
+                end if;                                           
+    end if;        
+end process; 
 --************************** Read/Write to Register **********************************
 -- This process Write to or Read from registers
 
@@ -322,7 +419,7 @@ begin
                 Reg_11 (1) <= '0'; 
                 Reg_11(7 downto 4)      <= "0000"; 
                                 
---              Reg_12  <= "00100000";          -- Spare
+                Reg_12 (5 downto 0)  <= "000000";          -- Temporary use for one wire command
 --              Reg_13          <= "00100000";  -- Spare
                                 
                 Reg_14          <= "00000000";
@@ -345,7 +442,7 @@ begin
                 end if;
                 
         -- Register 5
-                    if Reg_enable = "0101"then
+                 if Reg_enable = "0101"then
                     if EBI_nWE = '0' then
                         -- uC write            
                         Reg_5      <=EBI_data_in;
@@ -358,7 +455,7 @@ begin
                 end if;
                 
         -- Register 6
-                    if Reg_enable = "0110"then
+                 if Reg_enable = "0110"then
                     if EBI_nWE = '0' then
                         -- uC write            
                --         Reg_6      <=EBI_data_in;
@@ -375,7 +472,7 @@ begin
                 end if;
                 
         -- Register 7
-                    if Reg_enable = "0111"then
+                 if Reg_enable = "0111"then
                     if EBI_nWE = '0' then
                         -- uC write 
                     		Reg_7 (0)            <= EBI_data_in(0);              
@@ -389,7 +486,7 @@ begin
                 end if;
                 
          -- Register 8 (Support Register 1)
-                    if Reg_enable = "1000"then
+                 if Reg_enable = "1000"then
                     if EBI_nWE = '0' then
                         -- uC write            
                         Reg_8     <=EBI_data_in;
@@ -400,14 +497,14 @@ begin
                 end if;       
 
           -- Register 9 (System control)
-                    if Reg_enable = "1001"then
+                if Reg_enable = "1001"then
                     if EBI_nWE = '0' then
                         Reg_9(7 downto 0) <= EBI_data_in(7 downto 0);
                     end if;
                 end if;       
                 
           -- Register 10 (ATWD Input Multiplexor Control)
-                    if Reg_enable = "1010"then
+                  if Reg_enable = "1010"then
                     if EBI_nWE = '0' then
                         -- uC write                                    
                         Reg_10(6 downto 0)   <=EBI_data_in(6 downto 0);
@@ -419,7 +516,7 @@ begin
                 end if;
                 
           -- Register 11 (Communication Control Register UART)
-                    if Reg_enable = "1011"then
+                 if Reg_enable = "1011"then
                     if EBI_nWE = '0' then
                         -- uC write            
                         Reg_11(1)      		<=EBI_data_in(1);
@@ -432,9 +529,20 @@ begin
 			               EBI_data_out(7 downto 4) 	<= Reg_11(7 downto 4);              
                     end if;
                 end if;
-                
+        -- Register 12 (one wire command register)
+                 if Reg_enable = "1100"then
+                    if EBI_nWE = '0' then
+                        -- uC write            
+                        Reg_12 (5 downto 0)   <=EBI_data_in (5 downto 0);
+                    else
+                        Reg_12 (3)   <='0'; -- allow only momentary write into this bit
+                        -- uC read
+--                        EBI_data_out <= Reg_12 ;  
+								EBI_data_out(6) <= Reg_12 (6);              
+                    end if;
+                end if;        
         -- Register 14 (ReBoot Control Register bit 0 write only)
-                    if Reg_enable = "1110"then
+                 if Reg_enable = "1110"then
                     if EBI_nWE = '0' then
                         -- uC write            
                         Reg_14      <=EBI_data_in;
@@ -446,7 +554,7 @@ begin
                 end if;
                 
         -- Register 15 (Boot Configuration Register)
-                    if Reg_enable = "1111"then
+                 if Reg_enable = "1111"then
                     if EBI_nWE = '0' then
                         -- uC write            
                         Reg_15(1 downto 0)      <=	EBI_data_in (1 downto 0);
