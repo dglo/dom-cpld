@@ -153,6 +153,12 @@ end EB_Interface_rev2;
 
 architecture EB_Interface_rev2_arch of EB_Interface_rev2 is
 
+  -- CPLD version number
+  component version
+    port (
+      vsn : out STD_LOGIC_VECTOR (31 downto 0));
+  end component;
+
 --**************************** Constants ***************************************
 -- Set the active reset level
 constant RESET_ACTIVE : STD_LOGIC := '0';           -- default is active low reset
@@ -195,8 +201,15 @@ signal CPLD_Power_Up_nRESET_Count_Enable  :std_logic;
 signal CPLD_Power_Up_nRESET_Counter 		:std_logic_vector(4 downto 0);
 signal CPLD_Power_Up_nRESET_Done    		:std_logic;
 
+  signal vsn : STD_LOGIC_VECTOR (31 downto 0);
+  
 --**************************** Start ***************************************
 begin
+
+  inst_version : version
+    port map (
+      vsn => vsn);
+    
 
 --************************** Bi-directional EB Data Bus *****************************
 
