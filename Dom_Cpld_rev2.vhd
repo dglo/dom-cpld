@@ -134,10 +134,10 @@ entity EB_Interface_rev2 is
 
 -- Excalibur'FPGA & DOM's CPLD Signals
         Int_Ext_pin_n   : OUT STD_LOGIC;        -- ??? -- 1/30/03
---      FPGA_PLD_nWE    : inout STD_LOGIC;
---      FPGA_PLD_nOE    : inout STD_LOGIC;
---      FPGA_PLD_BUSY   : inout STD_LOGIC;
---   FPGA_PLD_D         : inout STD_LOGIC_VECTOR (7 downto 0);
+      FPGA_PLD_nWE    : inout STD_LOGIC;
+      FPGA_PLD_nOE    : inout STD_LOGIC;
+      FPGA_PLD_BUSY   : inout STD_LOGIC;
+   FPGA_PLD_D         : inout STD_LOGIC_VECTOR (7 downto 0);
 
 -- Other Signals 
         
@@ -224,6 +224,20 @@ begin
    
         FL_ON_OFF       <=  Reg_9(1);
         FL_UNDEFINED    <=  Reg_9(1);
+
+-- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
+--=============================================================================
+	FPGA_PLD_D	  <= EBD	when (EB_nCS(2)= '0') 
+		else	"ZZZZZZZZ";
+	FPGA_PLD_nOE  <= EB_nOE 	when (EB_nCS(2)= '0') 
+		else	'Z';
+	FPGA_PLD_nWE  <= EB_nWE 	when (EB_nCS(2)= '0') 
+		else	'Z';
+	FPGA_PLD_BUSY <= EB_nWE 	when (EB_nCS(2)= '0') 
+		else	'Z';
+
+	Reg_13 		  <=  FPGA_PLD_D	 when (EB_nCS(2)= '0');
+--==============================================================================
 
 
         BASE_MISO  <=  '0'   when (Reg_12(7) = '1' and Reg_5 (1)='1')  else 'Z';	 -- changed by C.Vu 6-4-03
