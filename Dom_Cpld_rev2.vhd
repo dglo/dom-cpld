@@ -100,7 +100,7 @@ entity EB_Interface_rev2 is
    BASE_nCS1		: out STD_LOGIC;		-- Register 5-d1
 	BASE_On_Off		: out STD_LOGIC; 		-- Register 9-d0 (HV_PS-Enable)
 	BASE_Sclk		: out STD_LOGIC; 		-- the same as sc_sclk
-	BASE_MISO		: in STD_LOGIC; 
+	BASE_MISO		: inout STD_LOGIC; 
 	BASE_MOSI		: out STD_LOGIC; 	
 -- Temperature Sensor        
    SC_nCS7		: inout STD_LOGIC;	-- Register 8-d1 
@@ -129,17 +129,17 @@ entity EB_Interface_rev2 is
 
 -- Excalibur'FPGA & DOM's CPLD Signals
   	Int_Ext_pin_n	: OUT STD_LOGIC;  	-- ??? -- 1/30/03
-	FPGA_PLD_nWE	: inout STD_LOGIC;
-	FPGA_PLD_nOE	: inout STD_LOGIC;
-	FPGA_PLD_BUSY	: inout STD_LOGIC;
-	FPGA_PLD_D		: inout STD_LOGIC_VECTOR (7 downto 0);
+--	FPGA_PLD_nWE	: inout STD_LOGIC;
+--	FPGA_PLD_nOE	: inout STD_LOGIC;
+--	FPGA_PLD_BUSY	: inout STD_LOGIC;
+--   FPGA_PLD_D		: inout STD_LOGIC_VECTOR (7 downto 0);
 
 -- Other Signals 
 	
 	AUX_CLT			: inout STD_LOGIC;	-- Register 10-d6	( this is only one direction and depend on what ext device)	
 	
 	PLD_Mode			: in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
-	PLD_TP			: out STD_LOGIC	-- Last port of the Entity
+	PLD_TP			: inout STD_LOGIC	-- Last port of the Entity
 	
 
 --        	Reset			: in STD_LOGIC		                
@@ -171,7 +171,7 @@ signal Reg_8  		: std_logic_vector(7 downto 0);
 signal Reg_9  		: std_logic_vector(7 downto 0);
 signal Reg_10  	: std_logic_vector(7 downto 0);
 signal Reg_11		: std_logic_vector(7 downto 0);
-signal Reg_12  	: std_logic_vector(7 downto 0);
+signal Reg_12           : std_logic_vector(7 downto 0); -- temporary use for one wire commands
 signal Reg_13  	: std_logic_vector(7 downto 0);
 signal Reg_14  	: std_logic_vector(7 downto 0);	-- Reboot control register 
 signal Reg_15  	: std_logic_vector(7 downto 0);	-- Boot configuration register
@@ -181,12 +181,16 @@ signal EBD_out  	: std_logic_vector(7 downto 0);
 signal Reset		:std_logic;
 signal CPU_Reboot_Pulse 	:std_logic;
 signal count  		: unsigned(3 downto 0);
+signal one_wire_counter : unsigned(15 downto 0);
+signal One_Wire_Count_Enable   :std_logic;
 signal SW_reboot 	:std_logic; -- to delay the nConfig signal 
 
 --**************************** Start ***************************************
 begin
 
 --************************** Bi-directional EB Data Bus *****************************
+
+	PLD_TP <= '0'; -- hack to keep compiler happy for now...
 
 	EBD   <= EBD_out 	when (EB_nOE = '0' and EB_nCS(2)= '0')
 		else  		FL_D 				when (EB_nOE = '0' and EB_nCS(3)= '0' and Reg_9(1) ='1')  
@@ -209,20 +213,10 @@ begin
 	FL_ON_OFF  		<=  Reg_9(1);
 	FL_UNDEFINED 	<=  Reg_9(1);
 
--- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
---=============================================================================
-	FPGA_PLD_D	  <= EBD	when (Reg_12(0) ='1' and EB_nCS(2)= '0') 
-		else	"ZZZZZZZZ";
-	FPGA_PLD_nOE  <= EB_nOE 	when (Reg_12(0) ='1' and EB_nCS(2)= '0') 
-		else	'Z';
-	FPGA_PLD_nWE  <= EB_nWE 	when (Reg_12(0) ='1' and EB_nCS(2)= '0') 
-		else	'Z';
-	FPGA_PLD_BUSY <= EB_nWE 	when (Reg_12(0) ='1' and EB_nCS(2)= '0') 
-		else	'Z';
 
-	Reg_13 		  <=  FPGA_PLD_D	 when (Reg_12(0) ='0' and EB_nCS(2)= '0');
---==============================================================================
+        BASE_MISO  <=  '0'   when (Reg_12(7) = '1')  else 'Z';
 
+        
 ------
 --	SC_nCS7   <=  Reg_8(1)   	when (Reg_8(2) = '1')  else 'Z';
 --	Reg_8(1)  <=  SC_nCS7 	when (Reg_8(2) = '0')  else '0';
@@ -296,7 +290,6 @@ begin
 
    Int_Ext_pin_n  <=  '1';   	
 
-	PLD_TP			<=   Reg_15(1); -- boot_flash register bit status
 		
 --************************** EB Address Decode ***********************************
 -- This process decodes the address and sets enables for the registers
@@ -368,6 +361,89 @@ begin
     end if;        
 end process; 
 
+--************************** one wire cycle ***********************************
+-- This process extend the nCONFIG pulse
+one_wire_Cycle: process (reset, PLD_clk)
+begin
+    if reset = RESET_ACTIVE then 
+               One_Wire_Count_Enable <= '0';      
+        -- Synchronize with falling edge of clock
+    elsif PLD_clk'event and (PLD_clk = '1') then
+    	if Reg_12(3) = '1' then
+     	One_Wire_Count_Enable <= '1';
+	elsif (one_wire_counter = 1200 and Reg_12(2 downto 0) < "111" ) then
+          One_Wire_Count_Enable <= '0'; -- stop count when other command
+     elsif one_wire_counter = 19200 then
+	     One_Wire_Count_Enable <= '0';	-- stop count when Reset command
+     end if;                                           
+    end if;        
+end process;  
+--************************** one wire pulse width ***********************************
+-- This process extend the nCONFIG pulse
+one_wire_pulse: process (reset, PLD_clk)
+begin
+    if reset = RESET_ACTIVE then 
+         Reg_12 (7 downto 6) <= "01"; 			      
+        -- Synchronize with rising edge of clock
+    elsif PLD_clk'event and (PLD_clk = '1') then
+    		if One_Wire_Count_Enable = '1' then   -- 
+				 	
+					if one_wire_counter = 1 then
+					 Reg_12(7) <= '1' ; -- send the '0' to BASE_MISO
+					end if ;
+
+					case Reg_12(2 downto 0) is
+	   			 	when "001" => 		-- write 1 puls
+	   					if one_wire_counter = 120 then
+								Reg_12(7) <= '0';
+							end if;
+						when "010" =>		-- write 0 puls
+	   					if one_wire_counter = 1200 then
+								Reg_12(7) <= '0';
+							end if;
+						when "011" =>	   -- Read 1 bit puls
+	   					if one_wire_counter = 120 then
+								Reg_12(7) <= '0';		--
+							end if;
+							if one_wire_counter = 300 then
+								Reg_12(6) <= BASE_MISO;	-- sampling the data line @ 15us for data
+							end if;	
+						when "111" =>     -- Reset puls
+	   					if one_wire_counter = 9600 then
+								Reg_12(7) <= '0';
+							end if;
+							if one_wire_counter = 11000 then
+								Reg_12(6) <= BASE_MISO;	-- sampling the data line @ 550us for slave
+							end if;
+	   			   when others => null;
+	   			end case;
+				  	
+					if one_wire_counter = 19200 then
+
+					end if ;
+							
+--         		Reg_12(7) <= '0';
+--         	elsif one_wire_counter = 19200 then
+--            	Reg_12(7) <= '1';
+--         	end if; 
+			end if;	                                          
+    end if;        
+end process; 
+--************************** one wire counter ***********************************
+-- This process provide the one wire pulse
+one_wire_count: process (reset, PLD_clk)
+begin
+    if reset = RESET_ACTIVE then 
+               one_wire_counter <= "0000000000000000";       
+        -- Synchronize with falling edge of clock
+    elsif PLD_clk'event and (PLD_clk = '0') then
+                if One_Wire_Count_Enable = '1' then
+                        one_wire_counter <= one_wire_counter + 1;
+                else
+                        one_wire_counter <= "0000000000000000";
+                end if;                                           
+    end if;        
+end process; 
 
 --************************** Read/Write to Register **********************************
 -- This process Write to or Read from registers
@@ -393,7 +469,7 @@ begin
     		Reg_11 (1) <= '0'; 
     		Reg_11(7 downto 5)   <= "000"; 
     		   		
-	    	Reg_12 		<= "00000000"; -- for temporary setting the communication with the CPU's FPGA Feb-19-03 C.Vu
+                Reg_12 (5 downto 0)  <= "000000";          -- Temporary use for one wire command
 --    	Reg_13   	<= "00100000";	-- Spare
     		      		
     		Reg_14 		<= "00000000";
@@ -439,7 +515,7 @@ begin
                         EBD_out (1 downto 0) 	<= Reg_6 (1 downto 0); 
 								EBD_out (7 downto 4) 	<= Reg_6 (7 downto 4);
 								EBD_out(2) 		<=	SC_MISO;
-								EBD_out(3) 		<=	BASE_MISO;             
+					-- EBD_out(3) 		<=	BASE_MISO; -- [we use this now for 1-wire!!!]
                     end if;
                 end if;
                 
@@ -501,16 +577,18 @@ begin
                     end if;
                 end if;
     
-	-- Register 12 (Communication with FPGA)
-          	if Reg_enable = "1100"then
+        -- Register 12 (one wire command register)
+                 if Reg_enable = "1100"then
                     if EB_nWE = '0' then
                         -- uC write            
-                        Reg_12      <=EBD_in;
+                        Reg_12 (5 downto 0)   <=EBD_in (5 downto 0);
                     else
+                        Reg_12 (3)   <='0'; -- allow only momentary write into this bit
                         -- uC read
-                        EBD_out <= Reg_12;              
+--                        EBI_data_out <= Reg_12 ;  
+					EBD_out(6) <= Reg_12 (6);              
                     end if;
-                end if; 
+                end if;        
 
 	-- Register 13 (for temporary to store data from CPU's FPGA)
 				 if Reg_enable = "1101"then
@@ -554,5 +632,5 @@ begin
           	   
         end if;        
     end process;      
-    
+
 end EB_Interface_rev2_arch;
