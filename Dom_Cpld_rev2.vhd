@@ -228,8 +228,8 @@ begin
 
 -- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
 --=============================================================================
-	FPGA_PLD_D	  <= EBD	when (EB_nCS(2)= '0') 
-		else	"ZZZZZZZZ";
+--	FPGA_PLD_D	  <= EBD	when (EB_nCS(2)= '0') 
+--		else	"ZZZZZZZZ";
 	FPGA_PLD_nOE  <= EB_nOE 	when (EB_nCS(2)= '0') 
 		else	'Z';
 	FPGA_PLD_nWE  <= EB_nWE 	when (EB_nCS(2)= '0') 
@@ -237,8 +237,7 @@ begin
 	FPGA_PLD_BUSY <= EB_nWE 	when (EB_nCS(2)= '0') 
 		else	'Z';
 
-	Reg_13 		  <=  FPGA_PLD_D	 when (EB_nCS(2)= '0')
-		else	"ZZZZZZZZ";
+	Reg_13 		  <=  FPGA_PLD_D;
 --==============================================================================
 
 
