@@ -62,7 +62,7 @@ entity EB_Interface_rev2 is
    Conf_Done    			: in STD_LOGIC; -- from CPU     to R15-d4       
    nRESET          		: in STD_LOGIC; -- from CPU     to R15-d6
    nSTATUS         		: in STD_LOGIC; -- from CPU to R15-d7
-   nPOR                 : in STD_LOGIC; -- power on reset switch
+   nPOR                 : inout STD_LOGIC; -- power on reset switch
    soft_reset  			: in STD_LOGIC;  -- normal High, push to Low, OR with Reg_14(0) to force nCONFIG down 
           
 -- Barometer        
@@ -201,6 +201,7 @@ begin
 --************************** Bi-directional EB Data Bus *****************************
 
         PLD_TP <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-4-03 C.Vu
+        nPOR <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-5-03 C.Vu
 
         EBD   <= EBD_out      when (EB_nOE = '0' and EB_nCS(2)= '0')
         else     FL_D    		when (EB_nOE = '0' and EB_nCS(3)= '0' and Reg_9(1) ='1')  
@@ -398,7 +399,7 @@ begin
     elsif PLD_clk'event and (PLD_clk = '1') then
         	if Reg_12(3) = '1' then
         		One_Wire_Count_Enable <= '1';
-        	elsif (one_wire_counter = 1200 and Reg_12(2 downto 0) < "111" ) then
+        	elsif (one_wire_counter = 1400 and Reg_12(2 downto 0) < "111" ) then
           	One_Wire_Count_Enable <= '0'; 	-- stop count when other command
     		elsif one_wire_counter = 19200 then
              One_Wire_Count_Enable <= '0';   -- stop count when Reset command
@@ -425,7 +426,7 @@ begin
                	Reg_12(7) <= '0';
                end if;
             when "010" =>           -- finish write 0 puls
-            	if one_wire_counter = 1200 then
+            	if one_wire_counter = 1400 then
                	Reg_12(7) <= '0';
                end if;
             when "011" =>      		-- Read 1 bit puls
@@ -577,7 +578,7 @@ begin
                         EBD_out (1 downto 0)    <= Reg_6 (1 downto 0); 
                       	EBD_out (7 downto 4)    <= Reg_6 (7 downto 4);
                       	EBD_out(2)              <=      SC_MISO;
-                     -- EBD_out(3)           <=      BASE_MISO; -- [we use this now for 1-wire!!!]
+                        EBD_out(3)           <=      BASE_MISO;
                     end if;
                 end if;
                 
