@@ -2,33 +2,37 @@
 -- Author: C.Vu
 -- Version : 1
 --      Rev  : 0       Date: Feb-18-2003
---                              (This is the modification of code in Ice_cube3 project on Feb-18-03)
+--        (This is the modification of code in Ice_cube3 project on Feb-18-03)
 --
 --    Rev  : 1       Date: April-16-2003
---                      - Add by Thorsten on ~ 4-11-03)
---                              1) SC_nCS7   <=  'Z' WHEN Reg_4(7)='1' ELSE '0';   
---                         2) Reg_4(7) in read register   
---                      - Add by Chinh on ~ 4-16-03)                                            
---                         3) nCONFIG_pulse: process  the if statement are reversed order to alway clear the counter
---                      - Add by Chinh on ~ 4-17-03)                                            
---                         4) Add nCONFIG_delay: to delay the start of nCONFIG pulse 
---                         5) change nCONFIG <=  --------------------                                                               
+--        - Add by Thorsten on ~ 4-11-03)
+--           1) SC_nCS7   <=  'Z' WHEN Reg_4(7)='1' ELSE '0';   
+--           2) Reg_4(7) in read register   
+--               - Add by Chinh on ~ 4-16-03)
+--           3) nCONFIG_pulse: process the if statement are
+--              reversed order to alway clear the counter
+--                - Add by Chinh on ~ 4-17-03)                                            
+--           4) Add nCONFIG_delay: to delay the start of nCONFIG pulse 
+--           5) change nCONFIG <=  --------------------
 --    Rev   : 2          Date: June-4-2003
---                                                              - Add by Arthur on 6-2-03
---                                                                      1) Add the one wire codes at Wisconsin
---                                                              - Add by Chinh on 6-4-03
---                                                                      1)      Change the MISO concurrent statement to be controlled by both (Reg_12(7) = '1' and Reg_4 (1)='1')
---                                                                      2) Add CPLD_Power_Up_nRESET cycle to allow the CPLD to issue the Reset pulse after it power up  
+--             - Add by Arthur on 6-2-03
+--           1) Add the one wire codes at Wisconsin
+--              - Add by Chinh on 6-4-03
+--           1) Change the MISO concurrent statement to be controlled by
+--              both (Reg_12(7) = '1' and Reg_4 (1)='1')
+--           2) Add CPLD_Power_Up_nRESET cycle to allow the CPLD to issue
+--              the Reset pulse after it power up  
 --      Documentations used:    
---              --Dom Schematics (V11.0)
---              --Excalibur devices Hardware Reference Manual pages (91-96)
---              -- DOM CPLD Description and API (Gerald Przybylski v0.0 Nov-14-2002)
---
+--           --Dom Schematics (V11.0)
+--           --Excalibur devices Hardware Reference Manual pages (91-96)
+--           -- DOM CPLD Description and API
+--              (Gerald Przybylski v0.0 Nov-14-2002)
 --
 --      Compilation notes:
--- Compile the Cool Runner CPLD in binary coding to save FF since it does not have a lot of FF 
+-- Compile the Cool Runner CPLD in binary coding to save FF since it does
+-- not have a lot of FF 
 --              
---==============================================================================
+--============================================================================
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -148,7 +152,8 @@ entity EB_Interface_rev2 is
 
     AUX_CLT : inout std_logic;          -- Register 10-d6       ( this is only one direction and depend on what ext device)     
 
-    --PLD_Mode                : in STD_LOGIC;  -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
+    --PLD_Mode                : in STD_LOGIC;  -- normal High, jumper to Low,
+    -- OR with Reg_15(1) to force reboot from flash memory
     Single_LED_ENABLE : out std_logic;
     BASE_HV_DISABLE   : out std_logic;
     PLD_TP            : in  std_logic   -- Last port of the Entity
