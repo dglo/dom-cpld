@@ -58,7 +58,7 @@ entity EB_Interface_rev2 is
 -- Excalibur special pins 
    Boot_Flash  			: out STD_LOGIC; -- Register 15-d1
    Init_Done    			: in STD_LOGIC; -- Register 15-d2
-   nConfig              : out STD_LOGIC;        -- Register 15-d3       
+   nConfig              : inout STD_LOGIC;        -- Register 15-d3       
    Conf_Done    			: in STD_LOGIC; -- from CPU     to R15-d4       
    nRESET          		: in STD_LOGIC; -- from CPU     to R15-d6
    nSTATUS         		: in STD_LOGIC; -- from CPU to R15-d7
@@ -202,6 +202,8 @@ signal One_Wire_Count_Enable   :std_logic;
 signal SW_reboot        :std_logic; -- to delay the nConfig signal 
 
   signal vsn : STD_LOGIC_VECTOR (31 downto 0);
+
+  signal nPOR_flag, nCONFIG_flag, nRESET_flag, reg15enable, nCOMM_RESET_flag	: STD_LOGIC;
   
 --**************************** Start ***************************************
 begin
@@ -327,8 +329,7 @@ begin
         
         Boot_Flash      <=       Reg_15(1) or (not PLD_TP) ;   -- Register 15-d1     
         nConfig         <= '0' when ( SW_reboot = '1' or COMM_RESET = '0') else 'Z';
-  
-    Reset                        <=      nPOR;
+	   Reset                        <=      nPOR;
 
    Int_Ext_pin_n  <=  '1';      
 
@@ -490,7 +491,7 @@ end process;
 --************************** Read/Write to Register **********************************
 -- This process Write to or Read from registers
 
-register_rw: process(EB_Clk, reset)
+register_rw: process(EB_Clk, reset, nPOR, nCONFIG, nRESET, COMM_RESET)
 begin
     if reset = RESET_ACTIVE then    
              EBD_out                <= "00000000";  
@@ -703,13 +704,42 @@ begin
                         EBD_out(1 downto 0) <= Reg_15 (1 downto 0);
 
                       	EBD_out(2)              <=    Init_Done;      -- Register 15-d2
-                      	EBD_out(4)              <= 	Conf_Done;           
-                      	EBD_out(6)              <=    nRESET;         
-                      	EBD_out(7)              <=    nSTATUS;       
+					EBD_out(3)		    <=	nCONFIG_flag;
+                      	EBD_out(4)              <= 	Conf_Done;
+					EBD_out(5)		    <=	nPOR_flag;           
+                      	EBD_out(6)              <=    nRESET_flag;         
+                      	EBD_out(7)              <=    nCOMM_RESET_flag; -- nSTATUS     
                     end if;
+
                 end if;
+
+			 if reg15enable='1' and reg_enable/="1111" and EB_nWE='1' then
+			 	nRESET_flag <= '0';
+				nPOR_flag	<= '0';
+				nCONFIG_flag <= '0';
+				nCOMM_RESET_flag <= '0';
+			 end if;
+			 if reg_enable="1111" then
+			 	reg15enable <= '1';
+			else
+				reg15enable <= '0';
+			end if;
                    
-        end if;        
+        end if;
+	   
+	   if nPOR='0' then
+	   	nPOR_flag <= '1';
+	   end if;
+	   if nRESET='0' then
+	     nRESET_flag <= '1';
+	   end if;
+	   if nCONFIG='0' then
+		nCONFIG_flag <='1';
+	   end if;
+	   if COMM_RESET='0' then
+	     nCOMM_RESET_flag <= '1';
+        end if;
+	           
     end process;      
 
 end EB_Interface_rev2_arch;
