@@ -65,7 +65,7 @@ entity EB_Interface_rev2 is
     nConfig    : inout std_logic;       -- Register 15-d3       
     Conf_Done  : in    std_logic;       -- from CPU     to R15-d4       
     nRESET     : in    std_logic;       -- from CPU     to R15-d6
-    nSTATUS    : in    std_logic;       -- from CPU to R15-d7
+    nSTATUS    : inout std_logic;       -- from CPU to R15-d7
     nPOR       : inout std_logic;       --reg_14 power on reset switch
     soft_reset : in    std_logic;       -- normal High, push to Low, OR with Reg_14(0) to force nCONFIG down 
 
@@ -216,6 +216,7 @@ architecture EB_Interface_rev2_arch of EB_Interface_rev2 is
   
   -- signal for nCONFIG delay after nPOR
   signal nCONFIG_nPOR_delay : std_logic;
+  signal nSTATUS_nPOR_delay : std_logic;
 
 --**************************** Start ***************************************
 begin
@@ -343,23 +344,32 @@ begin
 
   Boot_Flash <= Reg_15(1) or (not PLD_TP);  -- Register 15-d1     
   nConfig    <= '0' when ( SW_reboot = '1' or nCONFIG_nPOR_delay = '1') else 'Z';
+  nSTATUS    <= '0' when nSTATUS_nPOR_delay = '1' else 'Z';
   Reset      <= nPOR;
 
   Int_Ext_pin_n <= '1';
 
---************************** nCONFIG delay ******************************
+--************************** nCONFIG/nSTATUS delay ******************************
   process (reset, PLD_CLK)
     variable nCONFIG_delay_cnt : integer range 0 to 255;
   begin  -- process
     if reset = RESET_ACTIVE then
       nCONFIG_nPOR_delay   <= '1';
+      nSTATUS_nPOR_delay   <= '1';
       nCONFIG_delay_cnt   := 0;
     elsif PLD_CLK'event and PLD_CLK = '1' then
-      if nCONFIG_delay_cnt < 255 then
-        nCONFIG_delay_cnt := nCONFIG_delay_cnt + 1;
+      if nCONFIG_delay_cnt < 200 then
         nCONFIG_nPOR_delay <= '1';
       else
-        nCONFIG_nPOR_delay <= '0';
+        nCONFIG_nPOR_delay <= '0';          
+      end if;
+      if nCONFIG_delay_cnt < 250 then
+        nSTATUS_nPOR_delay <= '1';
+      else
+        nSTATUS_nPOR_delay <= '0';          
+      end if;
+      if nCONFIG_delay_cnt < 255 then
+        nCONFIG_delay_cnt := nCONFIG_delay_cnt + 1;
       end if;
     end if;
   end process;
