@@ -205,7 +205,7 @@ signal SW_reboot        :std_logic; -- to delay the nConfig signal
   signal vsn : STD_LOGIC_VECTOR (31 downto 0);
 
   signal nPOR_flag, nCONFIG_flag, nRESET_flag, reg15enable, nCOMM_RESET_flag	: STD_LOGIC;
-  
+
 --**************************** Start ***************************************
 begin
 
@@ -238,7 +238,7 @@ begin
         else    '1'           when (Reg_9(1) ='1' and EB_nCS(3)= '1')
         else    'Z';
    
-        FL_ON_OFF       <=  Reg_9(1) when (nConfig = '1') else '0';
+        FL_ON_OFF       <=  Reg_9(1);
         FL_JTAGEN     <=  Reg_9(4);
 
 -- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
@@ -371,6 +371,7 @@ begin
 --   		elsif (Reg_15(1) and  (Reg_14(0) or not soft_reset)) = '1' then
    		elsif (Reg_14(0) or not soft_reset) = '1' then
             Reg_15(3) <= '0';
+            Reg_9(1) <= '0';            -- make sure the fl_on_off is off on reset
    		end if;                                                           
     end if;        
 end process;             
@@ -396,7 +397,7 @@ end process;
 nConfig_delay: process (reset, PLD_Clk, count)
 begin
     if reset = RESET_ACTIVE then 
-         SW_reboot <= '0';       
+         SW_reboot <= '0';
         -- Synchronize with falling edge of PLD clock
     elsif PLD_Clk'event and (PLD_Clk = '0') then
 	   	if count > 5 then
