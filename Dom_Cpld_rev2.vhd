@@ -557,7 +557,40 @@ begin
                                         
         -- Synchronize with falling edge of clock
         elsif EB_Clk'event and (EB_Clk = '0') then  
-        
+
+        -- Register 0
+                if Reg_enable = "0000" then
+                    if EB_nWE = '1' then
+                        -- uC read
+                        EBD_out <= vsn(7 downto 0);
+                    end if;
+                end if;
+
+        -- Register 1
+                if Reg_enable = "0001" then
+                    if EB_nWE = '1' then
+                        -- uC read
+                        EBD_out <= vsn(15 downto 8);
+                    end if;
+                end if;
+
+        -- Register 2
+                if Reg_enable = "0010" then
+                    if EB_nWE = '1' then
+                        -- uC read
+                        EBD_out <= vsn(23 downto 16);
+                    end if;
+                end if;
+                
+        -- Register 3 (this register is optional 8 bits of
+        -- api number is fine, we'll lv it here for now)
+                if Reg_enable = "0011" then
+                    if EB_nWE = '1' then
+                        -- uC read
+                        EBD_out <= vsn(31 downto 24);
+                    end if;
+                end if;
+
         -- Register 4
                 if Reg_enable = "0100" then
                     if EB_nWE = '0' then

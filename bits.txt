@@ -2,10 +2,10 @@ CPLD register descriptions from chinh's VHDL...
 
 Register 0-3: version number
 
-Register 0: build number high byte
-Register 1: build number low byte
-Register 2: api version high byte
-Register 3: api version low byte
+Register 0: build number low byte
+Register 1: build number high byte
+Register 2: api version low byte
+Register 3: api version high byte
 
 Register 4:
 
