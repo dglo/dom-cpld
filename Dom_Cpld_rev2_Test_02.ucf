@@ -107,6 +107,8 @@ NET "sel_a0" LOC = "S:PIN140";
 NET "sel_a1" LOC = "S:PIN15";
 NET "ex_txd" LOC = "S:PIN18";
 NET "eb_npor" LOC = "S:PIN95";
+NET "COMM_RESET" LOC = "S:PIN81";
+NET "FPGA_LOADED" LOC = "S:PIN75";
 #PINLOCK_END
 NET "flash_noe" FAST;
 NET "flash_nwe" FAST;

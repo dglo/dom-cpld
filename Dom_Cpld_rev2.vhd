@@ -65,10 +65,8 @@ entity EB_Interface_rev2 is
    nPOR                 : inout STD_LOGIC; --reg_14 power on reset switch
    soft_reset  			: in STD_LOGIC;  -- normal High, push to Low, OR with Reg_14(0) to force nCONFIG down 
 
--- for rev 3 boards
-   -- FPGA_LOADED : in STD_LOGIC; -- pin 75, from CPU, is the fpga loaded? (active low)
-   -- COMM_RESET : in STD_LOGIC;  -- pin 81, from CPU, is there a comm reset? (active low)
-
+   FPGA_LOADED : in STD_LOGIC; -- pin 75, from CPU, is the fpga loaded? (active low)
+   COMM_RESET : in STD_LOGIC;  -- pin 81, from CPU, is there a comm reset? (active low)
    
 -- Barometer        
    Barometer_Enable     : out STD_LOGIC;                -- Register 9-d2
@@ -335,14 +333,9 @@ begin
         Flash_nCS1      <= '0'  when ((not EB_nCS(0) and EB_nCS(1) and Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and not Reg_15(0) ) ='1')
           else    '1' ;
         
-        Boot_Flash     <=       Reg_15(1) or (not PLD_TP) ;   -- Register 15-d1     
---      nConfig         <= '0'  when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';  -- Register 15-d3
---      nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
-
---     for rev 3 boards
---     nConfig         <= '0'  when ( SW_reboot = '1' or COMM_RESET = '0' ) else 'Z';
+        Boot_Flash      <=       Reg_15(1) or (not PLD_TP) ;   -- Register 15-d1     
+        nConfig         <= '0'  when ( SW_reboot = '1' or COMM_RESET = '0') else 'Z';
   
-       nConfig         <= '0'  when ( SW_reboot = '1' or FPGA_PLD_D(6) = '0' ) else 'Z';      -- Register 15-d3
     Reset                        <=      nPOR;
 
    Int_Ext_pin_n  <=  '1';      
@@ -654,9 +647,7 @@ begin
                     else
                         -- uC read
                         EBD_out (7 downto 1) <= Reg_7 (7 downto 1);
-
-                    -- for rev 3 boards
-                    -- EBD_out(0) <= FPGA_LOADED;
+                        EBD_out(0) <= FPGA_LOADED;
                     end if;
                 end if;
                 
