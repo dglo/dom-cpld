@@ -3,8 +3,8 @@
 #
 # set part here...
 #
-part=xc2c256-7-TQ144
-#part=xc2c384-
+#part=xc2c256-7-TQ144
+part=xc2c384-10-TQ144
 
 if [[ ! -d __projnav ]]; then
 	mkdir __projnav
