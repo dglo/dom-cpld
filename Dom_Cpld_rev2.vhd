@@ -52,19 +52,22 @@ entity EB_Interface_rev2 is
    FL_nWE          		: out STD_LOGIC;
    FL_nOE               : out STD_LOGIC;
    FL_ON_OFF       		: out STD_LOGIC;
-   FL_UNDEFINED    		: out STD_LOGIC;
+   FL_JTAGEN    		: out STD_LOGIC;
         
         
 -- Excalibur special pins 
    Boot_Flash  			: out STD_LOGIC; -- Register 15-d1
    Init_Done    			: in STD_LOGIC; -- Register 15-d2
-   nConfig              : out STD_LOGIC;        -- Register 15-d3       
+   nConfig              : inout STD_LOGIC;        -- Register 15-d3       
    Conf_Done    			: in STD_LOGIC; -- from CPU     to R15-d4       
    nRESET          		: in STD_LOGIC; -- from CPU     to R15-d6
    nSTATUS         		: in STD_LOGIC; -- from CPU to R15-d7
    nPOR                 : inout STD_LOGIC; --reg_14 power on reset switch
    soft_reset  			: in STD_LOGIC;  -- normal High, push to Low, OR with Reg_14(0) to force nCONFIG down 
-          
+
+   FPGA_LOADED : in STD_LOGIC; -- pin 75, from CPU, is the fpga loaded? (active low)
+   COMM_RESET : in STD_LOGIC;  -- pin 81, from CPU, is there a comm reset? (active low)
+   
 -- Barometer        
    Barometer_Enable     : out STD_LOGIC;                -- Register 9-d2
          
@@ -96,8 +99,8 @@ entity EB_Interface_rev2 is
         SC_MOSI         : out STD_LOGIC;
                 
 -- ADC Signals ( ADC_Sclk = DAC_Sclk; ADC_Din = DAC_Din)        
-        SC_nCS5         : out STD_LOGIC;
-        SC_nCS6         : out STD_LOGIC;
+        SC_nCS5         : inout STD_LOGIC;
+        SC_nCS6         : inout STD_LOGIC;
         SC_MISO         : IN STD_LOGIC;   -- changed from OUT to IN on 1/30/03 C.Vu
         
 -- BASE (High Voltage) Signals        
@@ -139,12 +142,14 @@ entity EB_Interface_rev2 is
       FPGA_PLD_BUSY   : inout STD_LOGIC;
    FPGA_PLD_D         : inout STD_LOGIC_VECTOR (7 downto 0);
 
--- Other Signals 
+-- Other Signals
+
+	EB_nPOR	: OUT STD_LOGIC; 
         
         AUX_CLT                 : inout STD_LOGIC;      -- Register 10-d6       ( this is only one direction and depend on what ext device)     
         
-        PLD_Mode                : in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
-        PLD_TP                  : inout STD_LOGIC       -- Last port of the Entity
+        --PLD_Mode                : in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
+        PLD_TP                  : in STD_LOGIC       -- Last port of the Entity
         
 
 --              Reset                   : in STD_LOGIC                          
@@ -195,16 +200,15 @@ signal count            : unsigned(3 downto 0);
 signal one_wire_counter : unsigned(15 downto 0);
 signal One_Wire_Count_Enable   :std_logic;
 signal SW_reboot        :std_logic; -- to delay the nConfig signal 
--- Signals for CPLD_Power_Up_Reset
-signal CPLD_Power_Up_nRESET   				:std_logic; 
-signal CPLD_Power_Up_nRESET_Count_Enable  :std_logic;
-signal CPLD_Power_Up_nRESET_Counter 		:std_logic_vector(4 downto 0);
-signal CPLD_Power_Up_nRESET_Done    		:std_logic;
 
   signal vsn : STD_LOGIC_VECTOR (31 downto 0);
+
+  signal nPOR_flag, nCONFIG_flag, nRESET_flag, reg15enable, nCOMM_RESET_flag	: STD_LOGIC;
   
 --**************************** Start ***************************************
 begin
+
+	EB_nPOR <= nPOR;
 
   inst_version : version
     port map (
@@ -212,9 +216,6 @@ begin
     
 
 --************************** Bi-directional EB Data Bus *****************************
-
-        PLD_TP <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-4-03 C.Vu
-        nPOR <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-5-03 C.Vu
 
         EBD   <= EBD_out      when (EB_nOE = '0' and EB_nCS(2)= '0')
         else     FL_D    		when (EB_nOE = '0' and EB_nCS(3)= '0' and Reg_9(1) ='1')  
@@ -237,7 +238,7 @@ begin
         else    'Z';
    
         FL_ON_OFF       <=  Reg_9(1);
-        FL_UNDEFINED    <=  Reg_9(4);
+        FL_JTAGEN     <=  Reg_9(4);
 
 -- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
 --=============================================================================
@@ -276,12 +277,13 @@ begin
         SC_nCS2         <=      Reg_4 (2);
         SC_nCS3         <=      Reg_4 (3);
         SC_nCS4         <=      Reg_4 (4);
-        SC_nCS5         <=      Reg_4 (5);
-        SC_nCS6         <=      Reg_4 (6);
 
+        -- adc "chip selects" are open drain to support i2c...
+        SC_nCS5 <=  'Z' WHEN Reg_4(5)='1' ELSE '0';
+        SC_nCS6 <=  'Z' WHEN Reg_4(6)='1' ELSE '0';
         
-        BASE_nCS0               <=      Reg_5 (0);
-   BASE_nCS1            <=      Reg_5 (1);
+        BASE_nCS0       <=      Reg_5 (0);
+   	   BASE_nCS1       <=      Reg_5 (1);
 
         BASE_SClk       <=      Reg_6 (1);
         SC_SClk         <=      Reg_6 (1);              
@@ -295,8 +297,8 @@ begin
                 
 --      Base Signals
         
-        Mux_En0         <=      Reg_10 (0);     
-        Mux_En1         <=      Reg_10 (1);  
+        Mux_En0         <=      not Reg_10 (0);     
+        Mux_En1         <=      not Reg_10 (1);  
         Sel_A0          <=      Reg_10 (2);  
         Sel_A1          <=      Reg_10 (3); 
                 
@@ -325,11 +327,9 @@ begin
         Flash_nCS1      <= '0'  when ((not EB_nCS(0) and EB_nCS(1) and Reg_15(0) ) ='1') or ((EB_nCS(0) and not EB_nCS(1) and not Reg_15(0) ) ='1')
           else    '1' ;
         
-        Boot_Flash     <=       Reg_15(1) or (not PLD_Mode) ;   -- Register 15-d1     
---      nConfig         <= '0'  when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';  -- Register 15-d3
---      nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
-       nConfig         <= '0'  when ( SW_reboot = '1' or FPGA_PLD_D(6) = '0' ) else 'Z';      -- Register 15-d3
-    Reset                        <=      nPOR;
+        Boot_Flash      <=       Reg_15(1) or (not PLD_TP) ;   -- Register 15-d1     
+        nConfig         <= '0' when ( SW_reboot = '1' or COMM_RESET = '0') else 'Z';
+	   Reset                        <=      nPOR;
 
    Int_Ext_pin_n  <=  '1';      
 
@@ -488,45 +488,10 @@ begin
     end if;        
 end process; 
 
---************************** CPLD_Power_Up_nRESET cycle ***********************************
--- This process start the CPLD_Power_Up_nRESET cycle 
-CPLD_Power_Up_nRESET_Cycle: process (reset, PLD_clk)
-begin
-        -- Synchronize with Rising edge of PLD clock
-    if PLD_clk'event and (PLD_clk = '1') then
-	if  ((nPOR = '1' ) and (CPLD_Power_Up_nRESET_Done = '0')) then
-		CPLD_Power_Up_nRESET_Count_Enable <= '1';
-	elsif (CPLD_Power_Up_nRESET_Done = '1') then
-		CPLD_Power_Up_nRESET_Count_Enable <= '0';
-	end if;
-		     
-        	if CPLD_Power_Up_nRESET_Counter = 30 then
-        		CPLD_Power_Up_nRESET_Done <= '1';
-	else
-		CPLD_Power_Up_nRESET_Done <= '0';
-     	end if;                                           
-    end if;        
-end process;  
---************************** CPLD_Power_Up_nRESET counter ***********************************
--- This process provide nPOR reset pulse width from CPLD
-CPLD_Power_Up_nRESET_count: process (reset, PLD_clk)
-begin     
-        -- Synchronize with falling edge of PLD clock
-    if PLD_clk'event and (PLD_clk = '0') then
-	       if  (CPLD_Power_Up_nRESET_Count_Enable = '1') then
-			if ((CPLD_Power_Up_nRESET_Done = '1') or (CPLD_Power_Up_nRESET_Counter = 30)) then
-		    		CPLD_Power_Up_nRESET_Counter <= CPLD_Power_Up_nRESET_Counter ;				
-		       	else
-		         		CPLD_Power_Up_nRESET_Counter <= CPLD_Power_Up_nRESET_Counter + 1;
-			end if;                                          
-	     end if;
-   end if;     	            
-end process; 
-
 --************************** Read/Write to Register **********************************
 -- This process Write to or Read from registers
 
-register_rw: process(EB_Clk, reset)
+register_rw: process(EB_Clk, reset, nPOR, nCONFIG, nRESET, COMM_RESET)
 begin
     if reset = RESET_ACTIVE then    
              EBD_out                <= "00000000";  
@@ -552,7 +517,7 @@ begin
                              
              Reg_14          			<= "00000000";
              
-             Reg_15 (1 downto 0)    <= "10";                     
+             Reg_15 (1 downto 0)    <= "00";  -- changed to boot from config as default                   
 	--              Reg_15 (7 downto 4)     <= "0000" ;
                                         
         -- Synchronize with falling edge of clock
@@ -598,11 +563,13 @@ begin
                         Reg_4      <=EBD_in;
                     else
                         -- uC read
-                        EBD_out(6 downto 0) <= Reg_4(6 downto 0);
+                        EBD_out(4 downto 0) <= Reg_4(4 downto 0);
+				    EBD_out(5) <= SC_nCS5;
+ 				    EBD_out(6) <= SC_nCS6;
                         EBD_out(7) <= SC_nCS7;
                     end if;
                 end if;
-                
+                				   
         -- Register 5
                 if Reg_enable = "0101"then
                     if EB_nWE = '0' then
@@ -634,10 +601,11 @@ begin
                  if Reg_enable = "0111"then
                     if EB_nWE = '0' then
                         -- uC write 
-                        Reg_7   <= EBD_in;              
+                        Reg_7 (7 downto 1)   <= EBD_in (7 downto 1);
                     else
                         -- uC read
-                        EBD_out <= Reg_7;              
+                        EBD_out (7 downto 1) <= Reg_7 (7 downto 1);
+                        EBD_out(0) <= FPGA_LOADED;
                     end if;
                 end if;
                 
@@ -736,13 +704,42 @@ begin
                         EBD_out(1 downto 0) <= Reg_15 (1 downto 0);
 
                       	EBD_out(2)              <=    Init_Done;      -- Register 15-d2
-                      	EBD_out(4)              <= 	Conf_Done;           
-                      	EBD_out(6)              <=    nRESET;         
-                      	EBD_out(7)              <=    nSTATUS;                      
+					EBD_out(3)		    <=	nCONFIG_flag;
+                      	EBD_out(4)              <= 	Conf_Done;
+					EBD_out(5)		    <=	nPOR_flag;           
+                      	EBD_out(6)              <=    nRESET_flag;         
+                      	EBD_out(7)              <=    nCOMM_RESET_flag; -- nSTATUS     
                     end if;
+
                 end if;
+
+			 if reg15enable='1' and reg_enable/="1111" and EB_nWE='1' then
+			 	nRESET_flag <= '0';
+				nPOR_flag	<= '0';
+				nCONFIG_flag <= '0';
+				nCOMM_RESET_flag <= '0';
+			 end if;
+			 if reg_enable="1111" then
+			 	reg15enable <= '1';
+			else
+				reg15enable <= '0';
+			end if;
                    
-        end if;        
+        end if;
+	   
+	   if nPOR='0' then
+	   	nPOR_flag <= '1';
+	   end if;
+	   if nRESET='0' then
+	     nRESET_flag <= '1';
+	   end if;
+	   if nCONFIG='0' then
+		nCONFIG_flag <='1';
+	   end if;
+	   if COMM_RESET='0' then
+	     nCOMM_RESET_flag <= '1';
+        end if;
+	           
     end process;      
 
 end EB_Interface_rev2_arch;

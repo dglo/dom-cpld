@@ -1,0 +1,26 @@
+JDF F
+// Created by Project Navigator ver 1.0
+PROJECT Dom_Cpld_Rev2
+DESIGN dom_cpld_rev2 Normal
+DEVFAM xbr
+DEVFAMTIME 0
+DEVICE xc2c256
+DEVICETIME 0
+DEVPKG TQ144
+DEVPKGTIME 0
+DEVSPEED -7
+DEVSPEEDTIME 0
+FLOW XST VHDL
+FLOWTIME 0
+DOCUMENT api.num
+MODULE version.vhd
+MODSTYLE version Normal
+MODULE Dom_Cpld_rev2.vhd
+MODSTYLE eb_interface_rev2 Normal
+DEPASSOC eb_interface_rev2 Dom_Cpld_rev2_Test_02.ucf Normal
+[Normal]
+p_CPLDFitkeepio=xstvhd, xbr, Implementation.t_vm6File, 1045681406, True
+xcpldFitDesSlew=xstvhd, xbr, Implementation.t_vm6File, 1045681406, Slow
+xcpldFitDesVolt=xstvhd, xbr, Implementation.t_vm6File, 1045681406, LVCMOS33
+[STRATEGY-LIST]
+Normal=True
