@@ -52,7 +52,7 @@ entity EB_Interface_rev2 is
    FL_nWE          		: out STD_LOGIC;
    FL_nOE               : out STD_LOGIC;
    FL_ON_OFF       		: out STD_LOGIC;
-   FL_UNDEFINED    		: out STD_LOGIC;
+   FL_JTAGEN    		: out STD_LOGIC;
         
         
 -- Excalibur special pins 
@@ -238,7 +238,7 @@ begin
         else    'Z';
    
         FL_ON_OFF       <=  Reg_9(1);
-        FL_UNDEFINED    <=  Reg_9(4);
+        FL_JTAGEN     <=  Reg_9(4);
 
 -- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
 --=============================================================================

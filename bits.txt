@@ -74,7 +74,7 @@ Bit	 Read/Write	Description
 1	 R/W		FL_ON_OFF, Flash A/B select
 2	 R/W		Barometer_enable
 3	 R/W		Unassigned
-4	 R/W		FL_UNDEFINED
+4	 R/W		FL_JTAGEN
 5-7	 R/W		Unassigned
 
 Register 10
