@@ -1,7 +1,8 @@
 --	Project: Ice Cube -- Cool Runner CPLD Programming
 --	Author: C.Vu
---	Version:	1
---		Rev:	0	Date: Dec-30-2002
+--	Version	:	1
+--		Rev	:	0	Date: Jan-03-2003
+--		Rev	:	1	Date: Feb-05-2003
 --
 -- 	Documentations used:	
 --		--Dom Schematics (V11.0)
@@ -16,11 +17,13 @@
 
 library IEEE;
 use IEEE.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
 
 entity EB_Interface0 is
     port (
 -- Excaliber EBI    
-        EBI_Clk			: in STD_LOGIC;
+        EBI_Clk		: in STD_LOGIC;
         EBI_nCS		: in STD_LOGIC_VECTOR (3 downto 0);
         EBI_a			: in STD_LOGIC_VECTOR (3 downto 0);
         EBI_nOE		: in STD_LOGIC;
@@ -28,42 +31,42 @@ entity EB_Interface0 is
         EBI_nWE		: in STD_LOGIC;
         
 -- Excalibur special pins 
-        Boot_Flash        	: out STD_LOGIC;	-- Register 15-d1
-        Init_Done		: in STD_LOGIC;	-- Register 15-d2
-        nConfig		: out STD_LOGIC;	-- Register 15-d3 
+     Boot_Flash     : out STD_LOGIC;	-- Register 15-d1
+     Init_Done		: in STD_LOGIC;	-- Register 15-d2
+     nConfig		: out STD_LOGIC;	-- Register 15-d3 
              
 -- LED Power Supply        
-       	PS_Up		: out STD_LOGIC;	-- Register 9-d6
-        	PS_Down		: out STD_LOGIC;  	-- Register 9-d5
-        	PS_Enable		: out STD_LOGIC;	-- Register 9-d7
+     PS_Up		: out STD_LOGIC;	-- Register 9-d6
+     PS_Down		: out STD_LOGIC;  	-- Register 9-d5
+     PS_Enable		: out STD_LOGIC;	-- Register 9-d7
         
 -- Flasher  Board
-        ADC_Flasher_nCS	: out STD_LOGIC; 
-        ADC_Flasher_Dout	: out STD_LOGIC;
+     ADC_Flasher_nCS	: out STD_LOGIC; 
+     ADC_Flasher_Dout	: in STD_LOGIC;    -- changed from OUT to IN on 1/30/03 C.Vu
         
 -- Barometer        
-       	Barometer_Enable	: out STD_LOGIC;		-- Register 9-d2
+     Barometer_Enable	: out STD_LOGIC;		-- Register 9-d2
        	 
 -- Input select Mux for ATWD  
-     	Mux_En0      	: out STD_LOGIC;	-- Register 10-d0  
-         	Mux_En1      	: out STD_LOGIC;	-- Register 10-d1  
-	Sel_A0      		: out STD_LOGIC;	-- Register 10-d2 
-       	Sel_A1     		: out STD_LOGIC;	-- Register 10-d3 
+     Mux_En0      	: out STD_LOGIC;	-- Register 10-d0  
+     Mux_En1      	: out STD_LOGIC;	-- Register 10-d1  
+	Sel_A0      	: out STD_LOGIC;	-- Register 10-d2 
+     Sel_A1     	: out STD_LOGIC;	-- Register 10-d3 
        	
 -- Input select Mux for ???        	          
 	MUX_nCS0		: out STD_LOGIC;   -- Register 4-d7 
 	     
 -- Flash Memory signals
-	Flash_nWP		: out STD_LOGIC;	-- ?????
-	Flash_Reset		: out STD_LOGIC;	-- ?????
-	Flash_nWE		: out STD_LOGIC;		-- EBInWE
-	Flash_nOE		: out STD_LOGIC;		-- EBI_nOE
-	Flash_nCS0		: out STD_LOGIC;		-- Register 15-d0
-	Flash_nCS1		: out STD_LOGIC;		-- Register 15-d0
+	Flash_nWP		: out STD_LOGIC;	-- active low
+	Flash_Reset	: out STD_LOGIC;	-- active low
+	Flash_nWE		: out STD_LOGIC;	-- EBInWE
+	Flash_nOE		: out STD_LOGIC;	-- EBI_nOE
+	Flash_nCS0	: out STD_LOGIC;	-- Register 15-d0
+	Flash_nCS1	: out STD_LOGIC;	-- Register 15-d0
 	
 -- External PLL signals
 	PLL_S0		: out STD_LOGIC;	-- Register 10-d4	
-          PLL_S1		: out STD_LOGIC;	-- Register 10-d5
+     PLL_S1		: out STD_LOGIC;	-- Register 10-d5
          
 -- DAC Signals        
 	DAC_nCS0		: out STD_LOGIC; 		-- Register 4-d0
@@ -78,21 +81,21 @@ entity EB_Interface0 is
 -- ADC Signals ( ADC_Sclk = DAC_Sclk; ADC_Din = DAC_Din)	
 	ADC_nCS0		: out STD_LOGIC;
 	ADC_nCS1		: out STD_LOGIC;
-	ADC_Dout		: out STD_LOGIC;
+	ADC_Dout		: IN STD_LOGIC;   -- changed from OUT to IN on 1/30/03 C.Vu
 	
 -- BASE (High Voltage) Signals  
       
-      	BASE_Dout		: out STD_LOGIC; 		-- ?????
-      	BASE_nCS0		: out STD_LOGIC;		-- Register 5-d0
-      	BASE_nCS1		: out STD_LOGIC;		-- Register 5-d1
+     BASE_Dout		: IN STD_LOGIC; 		-- changed from OUT to IN on 1/30/03 C.Vu
+     BASE_nCS0		: out STD_LOGIC;		-- Register 5-d0
+     BASE_nCS1		: out STD_LOGIC;		-- Register 5-d1
 	BASE_On_Off	: out STD_LOGIC; 		-- Register 9-d0 (HV_PS-Enable)
 		
 -- Temperature Sensor        
-       	Temp_Sensor_IO	: inout STD_LOGIC;	-- Register 8-d1 
-         	Temp_Sensor_Clk	: out STD_LOGIC;     	-- Register 8-d0
+     Temp_Sensor_IO		: inout STD_LOGIC;	-- Register 8-d1 
+     Temp_Sensor_Clk	: out STD_LOGIC;     	-- Register 8-d0
          
 -- Communication ADC Signals
-	PLD_COM_ADC_D	: in STD_LOGIC_VECTOR (9 downto 0);
+--	PLD_COM_ADC_D	: in STD_LOGIC_VECTOR (9 downto 0); -- take out because it will not be used
 
 -- Communication DAC Signals
 	PLD_COM_DAC_D	: out STD_LOGIC_VECTOR (13 downto 6);	           
@@ -100,7 +103,7 @@ entity EB_Interface0 is
 -- UARTs Signals 
         RxD_Local			: in STD_LOGIC;
         DSR				: in STD_LOGIC;	                
-        Serial_Power			: in STD_LOGIC;	-- SERPWR  	Register 11-d0
+        Serial_Power		: in STD_LOGIC;	-- SERPWR  	Register 11-d0
         RxD				: out STD_LOGIC;	-- Serial_Receiver_Data	Register 11-d2  ????? IN or OUT??? to Excalibur UART_RXD pin F21
         TxD				: in STD_LOGIC;	-- Serial_Transmitter_Data	Register 11-d3
 
@@ -110,12 +113,12 @@ entity EB_Interface0 is
 	CPU_Clk			: in STD_LOGIC;  	-- Clock frequency ????
 	CLK_13			: out STD_LOGIC;	-- ???
 	CLK_24			: out STD_LOGIC;	-- ???
-	Int_Ext_pin_n		: in STD_LOGIC;  	-- ???
+	Int_Ext_pin_n		: OUT STD_LOGIC;  	-- ??? -- 1/30/03
 	AUX_CLT			: inout STD_LOGIC;	-- Register 10-d6	( this is only one direction and depend on what ext device)	
 	PLD_TP			: out STD_LOGIC;
 		
-        	nRESET			: out STD_LOGIC;	-- ???
-        	nPOR			: in STD_LOGIC	-- Last port of the Entity
+     nRESET			: in STD_LOGIC;	-- ???
+     nPOR				: in STD_LOGIC	-- Last port of the Entity
 --        	Reset			: in STD_LOGIC		
                 
     );
@@ -140,8 +143,8 @@ signal Reg_4  		: std_logic_vector(7 downto 0);	-- Chip select 0 Register
 signal Reg_5  		: std_logic_vector(7 downto 0); 	-- Chip select 1 Register 
 signal Reg_6  		: std_logic_vector(7 downto 0); 
 signal Reg_7  		: std_logic_vector(7 downto 0);
-signal	ADC0_Data		:std_logic;	-- for Future use
-signal	ADC1_Data		:std_logic;	-- for Future use
+-- signal	ADC0_Data		:std_logic;	-- for Future use
+-- signal	ADC1_Data		:std_logic;	-- for Future use
 signal Reg_8  		: std_logic_vector(7 downto 0);
 signal Reg_9  		: std_logic_vector(7 downto 0);
 signal Reg_10  		: std_logic_vector(7 downto 0);
@@ -153,21 +156,24 @@ signal Reg_15  		: std_logic_vector(7 downto 0);	-- Boot configuration register
 
 signal EBI_data_in  	: std_logic_vector(7 downto 0); 
 signal EBI_data_out  	: std_logic_vector(7 downto 0);
-signal	Reset			:std_logic;
+signal Reset			:std_logic;
+signal CPU_Reboot_Pulse 	:std_logic;
+signal count  			: unsigned(3 downto 0);
+
 --**************************** Start ***************************************
 begin
 
 --************************** Bi-directional EBI Data Bus *****************************
 
-	EBI_data   <= EBI_data_out 	when (EBI_nOE = '0')  else (others => 'Z');
+	EBI_data   <= EBI_data_out 	when (EBI_nOE = '0' and EBI_nCS(3)= '0')  else (others => 'Z');
 	--EBI_data_in  <= EBI_data 	when (EBI_nWE = '0') else (others => '0');
-	EBI_data_in  <= EBI_data 	when (EBI_nWE = '0') else "00000000";
+	EBI_data_in  <= EBI_data 	when (EBI_nWE = '0' and EBI_nCS(3)= '0') else "00000000";
 ------
-	ADC0_Data   <=  Reg_7(1)   	when (Reg_7(2) = '1')  else 'Z';
-	Reg_7(1)  <= ADC0_Data 	when (Reg_7(2) = '0')  else '0';	
+--	ADC0_Data   <=  Reg_7(1)   	when (Reg_7(2) = '1')  else 'Z';    ADC_Data0 & 1 is taking out 2/3/03
+--	Reg_7(1)  <= ADC0_Data 	when (Reg_7(2) = '0')  else '0';	
 ------
-	ADC1_Data   <=  Reg_7(5)   	when (Reg_7(6) = '1')  else 'Z';
-	Reg_7(5)  <= ADC1_Data 	when (Reg_7(6) = '0')  else '0';		
+--	ADC1_Data   <=  Reg_7(5)   	when (Reg_7(6) = '1')  else 'Z';
+--	Reg_7(5)  <= ADC1_Data 	when (Reg_7(6) = '0')  else '0';		
 ------
 	Temp_Sensor_IO   <=  Reg_8(1)   	when (Reg_8(2) = '1')  else 'Z';
 	Reg_8(1)  <=  Temp_Sensor_IO 	when (Reg_8(2) = '0')  else '0';
@@ -179,7 +185,10 @@ begin
 --	Reg_10(7)  <=  AUX_CLT 	when (Reg_10(6) = '0')  else '0';	-- Read as default
 ------
 
+--     Reg_15(3)	<= 	'0' when (Reg_15(1) and  Reg_14(0)) = '1'  else 'Z';
+	
 
+	PLD_COM_DAC_D  <=  "ZZZZZZZZ" ; --  Add on 1/30/03 C.Vu
 --************************** Concurrent Statements **********************************
 
 	DAC_nCS0		<=	Reg_4 (0); 	
@@ -192,13 +201,14 @@ begin
 	MUX_nCS0		<=	Reg_4 (7);
 	
 	BASE_nCS0		<=	Reg_5 (0);
-      	BASE_nCS1		<=	Reg_5 (1);
+     BASE_nCS1		<=	Reg_5 (1);
 	ADC_Flasher_nCS	<=	Reg_5 (2);
 --	ADC_Flasher_nCS	<=	Reg_5 (3);
 	
 	DAC_SClk		<=	Reg_6 (1);	
 	DAC_Din		<=	Reg_6 (2);
-	ADC_Dout		<=	Reg_6 (3);
+--	ADC_Dout		<=	Reg_6 (3);  -- 1/30/03
+	Reg_6 (3) 	<=	ADC_Dout;
 	DAC_CL		<=	Reg_6 (5);	
 	
 	Temp_Sensor_Clk	<=	Reg_8 (0);     
@@ -209,7 +219,7 @@ begin
 --	PS_Down		<=	Reg_9 (5);
 	PS_Down		<=	Reg_9 (5);
 	PS_Up		<=	Reg_9 (6);
-        	PS_Enable		<=	Reg_9 (7);
+     PS_Enable		<=	Reg_9 (7);
 	
 	Mux_En0		<=	Reg_10 (0);     
 	Mux_En1		<=	Reg_10 (1);  
@@ -218,42 +228,85 @@ begin
 	PLL_S0		<=	Reg_10 (4); 
 	PLL_S1		<=	Reg_10 (5);
 		
-	Reg_11 (0) 		<= Serial_Power;	
+	Reg_11 (0) 	<= Serial_Power;	
 	--	RxD 			<= '1' when ((Serial_Power = '0') or (Reg_11 (1) = '0'))
 	--	else	RXD_Local; 		
-	RxD 			<= RXD_Local when ((Serial_Power = '1') and (Reg_11 (1) = '1'))  -- Force DOM communication through on board serial interface
+--	RxD 			<= RXD_Local when ((Serial_Power = '1') and (Reg_11 (1) = '1'))  -- Force DOM communication through on board serial interface
+--   This line is temporary put in to by-pass Reg_11(1) 2/5/03 by Thorsten
+	RxD 			<= RXD_Local when ((Serial_Power = '1'))  -- Force DOM communication through on board serial interface
 	else	'1'; 		-- Hold Excalibur Uart inactive and let DOM communication through twisted pair with DOM Hub or Serrogate 	
-	Reg_11 (3) 		<= TxD;	
+	Reg_11 (3) 	<= TxD;
 	
-	Flash_nOE		<=	 EBI_nOE;
-	Flash_nWE		<=	 EBI_nWE;
+		
+	Flash_nWP		<=  '1'; -- Write Protection active low
+	Flash_Reset	<=  	nRESET ; 
+	Flash_nOE		<=	EBI_nOE;
+	Flash_nWE		<=	EBI_nWE;
 	Flash_nCS0   	<=  '0'   when ((not EBI_nCS(0) and EBI_nCS(1) and not Reg_15(0) ) ='1') or ((EBI_nCS(0) and not EBI_nCS(1) and Reg_15(0) ) ='1')
 	 else 	 '1' ;
 	Flash_nCS1   	<=  '0'   when ((not EBI_nCS(0) and EBI_nCS(1) and Reg_15(0) ) ='1') or ((EBI_nCS(0) and not EBI_nCS(1) and not Reg_15(0) ) ='1')
 	 else 	 '1' ;
 	
 	Boot_Flash        	<=	Reg_15(1);	-- Register 15-d1
-       	Reg_15(2)		<=	Init_Done;	-- Register 15-d2
-        	nConfig		<=	Reg_15(3);	-- Register 15-d3        
+     Reg_15(2)			<=	Init_Done;	-- Register 15-d2
+--	Reg_15(3)			<=	Reg_15(1) and  Reg_14(0);
+--	nConfig			<=	Reg_15(3);	-- Register 15-d3        
+	nConfig		<= '0' 	when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';	-- Register 15-d3
+     Reset			<=	nPOR;
+
+	CLK_13		<=  Init_Done and CPU_Clk;  	-- 1/30/03	
+	CLK_24		<=  Init_Done and CPU_Clk;	-- 1/30/03		
+     Int_Ext_pin_n  <=  '1';   	
 	
-        	Reset			<=	nPOR;
-        	
 --************************** EBI Address Decode ***********************************
 -- This process decodes the address and sets enables for the registers
-address_decode: process (reset, EBI_Clk)
+address_decode: process (reset, CPU_clk)
 begin
     if reset = RESET_ACTIVE then        
        Reg_enable <= "0000";
         -- Synchronize with falling edge of clock
        elsif EBI_Clk'event and (EBI_Clk = '0') then                
-	          if EBI_nCS = "0000" then
+	          if EBI_nCS(3 downto 2) = "01" then
 	          	Reg_enable <= EBI_a;
 	         else
 	         	Reg_enable <= "0000";
 	         end if	;			                                  
        end if;        
-    end process;  
+    end process; 
 
+--************************** nCONFIG pulse width ***********************************
+-- This process extend the nCONFIG pulse
+nCONFIG_pulse: process (reset, CPU_Clk)
+begin
+    if reset = RESET_ACTIVE then 
+    		Reg_15(3) <= '1';       
+--       Reg_enable <= "0000";
+        -- Synchronize with falling edge of clock
+    elsif CPU_Clk'event and (CPU_Clk = '1') then
+    		if (Reg_15(1) and  Reg_14(0)) = '1' then
+			Reg_15(3) <= '0';
+		elsif count = 15 then
+			Reg_15(3) <= '1';
+		end if;		                                  
+    end if;        
+end process;             
+
+--************************** nCONFIG count ***********************************
+-- This process extend the nCONFIG pulse
+nCONFIG_count: process (reset, CPU_Clk)
+begin
+    if reset = RESET_ACTIVE then 
+    		count <= "0000";       
+--       Reg_enable <= "0000";
+        -- Synchronize with falling edge of clock
+    elsif CPU_Clk'event and (CPU_Clk = '0') then
+    		if Reg_15(3) = '0' then
+			count <= count + 1;
+		else
+			count <= "0000";
+		end if;		                                  
+    end if;        
+end process; 
 --************************** Read/Write to Register **********************************
 -- This process Write to or Read from registers
 
@@ -263,8 +316,9 @@ begin
     		EBI_data_out  		<= "00000000";  
     		Reg_4 			<= "11111111";  
     		Reg_5 			<= "11111111";  
-    		Reg_6 			<= "00100000";
-    		
+    		Reg_6 (2 downto 0) 	<= "000";
+    		Reg_6 (7 downto 4)	<= "0010";
+
     		Reg_7 (0) 			<= '0';    		
     		Reg_7 (3 downto 2) 	<= "00";    		
     		Reg_7 (4) 			<= '0';    		
@@ -285,8 +339,8 @@ begin
     		      		
     		Reg_14 		<= "00000000";
     		
-    		Reg_15 (1 downto 0)  	<= "00";     
-    		Reg_15 (7 downto 3)  	<= "00001";
+    		Reg_15 (1 downto 0)  	<= "10";       		     
+    		Reg_15 (7 downto 4)  	<= "0000" ;
     		    	    		
         -- Synchronize with falling edge of clock
         elsif EBI_Clk'event and (EBI_Clk = '0') then  
@@ -317,7 +371,9 @@ begin
           	    if Reg_enable = "0110"then
                     if EBI_nWE = '0' then
                         -- uC write            
-                        Reg_6      <=EBI_data_in;
+               --         Reg_6      <=EBI_data_in;
+				    Reg_6 (2 downto 0) 	<= EBI_data_in (2 downto 0);
+    				    Reg_6 (7 downto 4)	<= EBI_data_in (7 downto 4);
                     else
                         -- uC read
                         EBI_data_out <= Reg_6;              
@@ -379,6 +435,7 @@ begin
                         -- uC write            
                         Reg_14      <=EBI_data_in;
                     else
+                        Reg_14      <="00000000";
                         -- uC read
                         EBI_data_out <= Reg_14;              
                     end if;
@@ -389,7 +446,7 @@ begin
                     if EBI_nWE = '0' then
                         -- uC write            
                         Reg_15(1 downto 0)      <=EBI_data_in (1 downto 0);
-                        Reg_15(7 downto 3)      <=EBI_data_in (7 downto 3);                        
+                        Reg_15(7 downto 4)      <=EBI_data_in (7 downto 4);                        
                     else
                         -- uC read
                         EBI_data_out <= Reg_15;              
