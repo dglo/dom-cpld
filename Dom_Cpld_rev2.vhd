@@ -200,11 +200,6 @@ signal count            : unsigned(3 downto 0);
 signal one_wire_counter : unsigned(15 downto 0);
 signal One_Wire_Count_Enable   :std_logic;
 signal SW_reboot        :std_logic; -- to delay the nConfig signal 
--- Signals for CPLD_Power_Up_Reset
-signal CPLD_Power_Up_nRESET   				:std_logic; 
-signal CPLD_Power_Up_nRESET_Count_Enable  :std_logic;
-signal CPLD_Power_Up_nRESET_Counter 		:std_logic_vector(4 downto 0);
-signal CPLD_Power_Up_nRESET_Done    		:std_logic;
 
   signal vsn : STD_LOGIC_VECTOR (31 downto 0);
   
@@ -219,9 +214,6 @@ begin
     
 
 --************************** Bi-directional EB Data Bus *****************************
-
-    -- no longer used as testpoint TS 10/30/03    PLD_TP <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-4-03 C.Vu
-        nPOR <= '0' 		   when (CPLD_Power_Up_nRESET_Count_Enable = '1')  else 'Z';	-- Add on 6-5-03 C.Vu
 
         EBD   <= EBD_out      when (EB_nOE = '0' and EB_nCS(2)= '0')
         else     FL_D    		when (EB_nOE = '0' and EB_nCS(3)= '0' and Reg_9(1) ='1')  
@@ -334,7 +326,7 @@ begin
           else    '1' ;
         
         Boot_Flash      <=       Reg_15(1) or (not PLD_TP) ;   -- Register 15-d1     
-        nConfig         <= '0'  when ( SW_reboot = '1' or COMM_RESET = '0') else 'Z';
+        nConfig         <= '0' when ( SW_reboot = '1' or COMM_RESET = '0') else 'Z';
   
     Reset                        <=      nPOR;
 
@@ -493,41 +485,6 @@ begin
                         one_wire_counter <= "0000000000000000";
                 end if;                                           
     end if;        
-end process; 
-
---************************** CPLD_Power_Up_nRESET cycle ***********************************
--- This process start the CPLD_Power_Up_nRESET cycle 
-CPLD_Power_Up_nRESET_Cycle: process (reset, PLD_clk)
-begin
-        -- Synchronize with Rising edge of PLD clock
-    if PLD_clk'event and (PLD_clk = '1') then
-	if  ((nPOR = '1' ) and (CPLD_Power_Up_nRESET_Done = '0')) then
-		CPLD_Power_Up_nRESET_Count_Enable <= '1';
-	elsif (CPLD_Power_Up_nRESET_Done = '1') then
-		CPLD_Power_Up_nRESET_Count_Enable <= '0';
-	end if;
-		     
-        	if CPLD_Power_Up_nRESET_Counter = 30 then
-        		CPLD_Power_Up_nRESET_Done <= '1';
-	else
-		CPLD_Power_Up_nRESET_Done <= '0';
-     	end if;                                           
-    end if;        
-end process;  
---************************** CPLD_Power_Up_nRESET counter ***********************************
--- This process provide nPOR reset pulse width from CPLD
-CPLD_Power_Up_nRESET_count: process (reset, PLD_clk)
-begin     
-        -- Synchronize with falling edge of PLD clock
-    if PLD_clk'event and (PLD_clk = '0') then
-	       if  (CPLD_Power_Up_nRESET_Count_Enable = '1') then
-			if ((CPLD_Power_Up_nRESET_Done = '1') or (CPLD_Power_Up_nRESET_Counter = 30)) then
-		    		CPLD_Power_Up_nRESET_Counter <= CPLD_Power_Up_nRESET_Counter ;				
-		       	else
-		         		CPLD_Power_Up_nRESET_Counter <= CPLD_Power_Up_nRESET_Counter + 1;
-			end if;                                          
-	     end if;
-   end if;     	            
 end process; 
 
 --************************** Read/Write to Register **********************************
@@ -748,7 +705,7 @@ begin
                       	EBD_out(2)              <=    Init_Done;      -- Register 15-d2
                       	EBD_out(4)              <= 	Conf_Done;           
                       	EBD_out(6)              <=    nRESET;         
-                      	EBD_out(7)              <=    nSTATUS;                      
+                      	EBD_out(7)              <=    nSTATUS;       
                     end if;
                 end if;
                    
