@@ -1,0 +1,152 @@
+CPLD register descriptions from chinh's VHDL...
+
+Register 0-3: version number
+
+Register 0: build number low byte
+Register 1: build number high byte
+Register 2: api version low byte
+Register 3: api version high byte
+
+Register 4:
+
+Reset: 00000000 (shouldn't this be 11111111?)
+
+
+Bit	 Read/Write	Description
+
+0-6	 R/W		SPI nCS [0-6]
+7        R/W		Temp Sensor SDA line (open drain).
+			  - misnamed as SC_nCS7 on schematic?
+
+Register 5:
+
+Reset: 11111111
+
+Bit	 Read/Write	Description
+
+0	 R/W		Base CS 0
+1	 R/W		Base CS 1
+2-7	 R/W		Unassigned
+
+Register 6
+
+Reset: 0010x000
+
+Bit	 Read/Write	Description
+
+
+Register 6
+
+Reset: 0010x000
+
+Bit    Read/Write	Description
+
+0	R/W		Unassigned 
+1	R/W		Base sclk, SC_SClk
+2	W		SC mosi
+2	R		SC miso
+3	W		Base mosi
+3	R		Base miso
+4	R/W		Unassigned
+5	R/W		SC_CL
+6	R		Unassigned
+7	R/W		Unassigned
+
+Notes: no bit 6 write function!
+
+
+Register 7
+
+Reset: 00000000
+
+Bit	 Read/Write	Description
+
+0-7	 R/W		Unassigned
+
+Register 8
+
+Reset: 00000000
+
+Bit	 Read/Write	Description
+
+0-7	 R/W		Unassigned
+
+Register 9
+
+Reset: 00100000
+
+Bit	 Read/Write	Description
+
+0	 R/W		Base_On_Off
+1	 R/W		FL_ON_OFF, Flash A/B select
+2	 R/W		Barometer_enable
+3	 R/W		Unassigned
+4	 R/W		FL_UNDEFINED
+5-7	 R/W		Unassigned
+
+Register 10
+
+Reset:  x1000000
+
+Bit	 Read/Write	Description
+
+0	 R/W	Mux_en0
+1	 R/W	Mux_en1
+2	 R/W	Sel_A0
+3	 R/W	Sel_A1
+4-5	 R/W	Unassigned
+6	 R/W	AUX_CLT R/W control
+7	 R/W	AUX_CLT
+
+
+Register 11
+
+Reset: 000xxx0x
+
+Bit	 Read/Write	Description
+
+0	 R		Serial Power
+1	 R/W		Serial enable?
+2-3	 R		Unassigned
+4	 R		11(1) or DSR_Local
+5-7	 R/W		Unassigned
+
+
+Register 12
+
+Reset: xx000000
+
+Bit	 Read/Write	Description
+
+0-3	 W		One-wire commands
+6	 R		One-wire done
+
+Register 13
+
+Reset: xxxxxxxx
+
+Bit	 Read/Write	Description
+
+0-7	 R		FPGA_PLD_D
+
+Register 14
+
+Reset: 00000000
+
+Bit	 Read/Write	Description
+
+0-7	 R		read as zero's
+0	 W		enable reboot?
+
+Register 15
+
+Reset: xxxxxx10
+
+Bit	 Read/Write	Description
+
+0	 R/W		alternate flash?
+1	 R/W		boot flash?
+2	 R		Init_done
+4	 R		Conf_done
+6	 R		nReset
+7	 R		nStatus
