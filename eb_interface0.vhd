@@ -193,14 +193,14 @@ begin
 	PLD_COM_DAC_D  <=  "ZZZZZZZZ" ; --  Add on 1/30/03 C.Vu
 --************************** Concurrent Statements **********************************
 
-	DAC_nCS0		<=	not Reg_4 (0); -- 3-13-03 C.Vu 	
-	DAC_nCS1		<=	not Reg_4 (1);	-- 3-13-03 C.Vu 
-	DAC_nCS2		<=	not Reg_4 (2);	-- 3-13-03 C.Vu 
-	DAC_nCS3		<=	not Reg_4 (3);	-- 3-13-03 C.Vu 
-	DAC_nCS4		<=	not Reg_4 (4);	-- 3-13-03 C.Vu 
-	ADC_nCS0		<=	not Reg_4 (5);	-- 3-13-03 C.Vu 
-	ADC_nCS1		<=	not Reg_4 (6);	-- 3-13-03 C.Vu 
-	MUX_nCS0		<=	not Reg_4 (7);	-- 3-13-03 C.Vu 
+	DAC_nCS0		<=	Reg_4 (0); -- 3-13-03 C.Vu 	
+	DAC_nCS1		<=	Reg_4 (1);	-- 3-13-03 C.Vu 
+	DAC_nCS2		<=	Reg_4 (2);	-- 3-13-03 C.Vu 
+	DAC_nCS3		<=	Reg_4 (3);	-- 3-13-03 C.Vu 
+	DAC_nCS4		<=	Reg_4 (4);	-- 3-13-03 C.Vu 
+	ADC_nCS0		<=	Reg_4 (5);	-- 3-13-03 C.Vu 
+	ADC_nCS1		<=	Reg_4 (6);	-- 3-13-03 C.Vu 
+	MUX_nCS0		<=	Reg_4 (7);	-- 3-13-03 C.Vu 
 	
 	BASE_nCS0		<=	Reg_5 (0);
      BASE_nCS1		<=	Reg_5 (1);
@@ -316,8 +316,8 @@ register_rw: process(EBI_Clk, reset)
 begin
     if reset = RESET_ACTIVE then    
     		EBI_data_out  		<= "00000000";  
---    		Reg_4 			<= "11111111"; 
-		Reg_4 			<= "00000000"; 
+    		Reg_4 			<= "11111111"; 
+--		Reg_4 			<= "00000000"; 
     		Reg_5 			<= "11111111";  
     		Reg_6 (2 downto 0) 	<= "000";
     		Reg_6 (7 downto 4)	<= "0010";
