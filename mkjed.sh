@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 if [[ ! -d __projnav ]]; then
 	mkdir __projnav
