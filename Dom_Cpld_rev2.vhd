@@ -310,12 +310,16 @@ begin
 --       Reg_enable <= "0000";
         -- Synchronize with rising edge of CPU clock
     elsif PLD_Clk'event and (PLD_Clk = '1') then
-    	 if (Reg_15(1) and  (Reg_14(0) or not soft_reset)) = '1' then -- Recheck operation feb-19-03
-		--if (Reg_15(1) and  (Reg_14(0))) = '1' then -- Recheck operation feb-19-03
-			Reg_15(3) <= '0';
-		elsif count = 15 then
-			Reg_15(3) <= '1';
-		end if;		                                  
+--    		if (Reg_15(1) and  (Reg_14(0) or not soft_reset)) = '1' then -- Recheck operation feb-19-03
+--				Reg_15(3) <= '0';
+--			elsif count = 15 then
+--				Reg_15(3) <= '1';
+--			end if;	
+			if count = 15 then -- changed April-16-03
+				Reg_15(3) <= '1';
+			elsif (Reg_15(1) and  (Reg_14(0) or not soft_reset)) = '1' then
+				Reg_15(3) <= '0';
+			end if;				                                  
     end if;        
 end process;             
 
@@ -377,7 +381,7 @@ begin
                     else
                         -- uC read
                         EBD_out(6 downto 0) <= Reg_4(6 downto 0);
-				    EBD_out(7) <= SC_nCS7;              
+                        EBD_out(7) <= SC_nCS7;
                     end if;
                 end if;
                 
