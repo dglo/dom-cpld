@@ -73,7 +73,7 @@ Bit	 Read/Write	Description
 0	 R/W		Base_On_Off
 1	 R/W		FL_ON_OFF, Flash A/B select
 2	 R/W		Barometer_enable
-3	 R/W		Unassigned
+3	 R/W		Single_LED_ENABLE
 4	 R/W		FL_JTAGEN
 5-7	 R/W		Unassigned
 
