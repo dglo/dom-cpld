@@ -224,7 +224,7 @@ begin
         else    'Z';
    
         FL_ON_OFF       <=  Reg_9(1);
-        FL_UNDEFINED    <=  Reg_9(1);
+        FL_UNDEFINED    <=  Reg_9(4);
 
 -- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
 --=============================================================================
@@ -236,6 +236,7 @@ begin
 		else	'Z';
 	FPGA_PLD_BUSY <= EB_nWE 	when (EB_nCS(2)= '0') 
 		else	'Z';
+
 
 	Reg_13 		  <=  FPGA_PLD_D;
 --==============================================================================
@@ -314,7 +315,7 @@ begin
         Boot_Flash     <=       Reg_15(1) or (not PLD_Mode) ;   -- Register 15-d1     
 --      nConfig         <= '0'  when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';  -- Register 15-d3
 --      nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
-       nConfig         <= '0'  when ( SW_reboot = '1' ) else 'Z';      -- Register 15-d3
+       nConfig         <= '0'  when ( SW_reboot = '1' or FPGA_PLD_D(6) = '0' ) else 'Z';      -- Register 15-d3
     Reset                        <=      nPOR;
 
    Int_Ext_pin_n  <=  '1';      
