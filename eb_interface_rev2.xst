@@ -12,12 +12,14 @@ run
 -iuc NO
 -keep_hierarchy YES
 -rtlview Yes
+-cross_clock_analysis NO
 -hierarchy_separator _
 -bus_delimiter <>
 -case lower
 -fsm_extract YES -fsm_encoding Auto
 -mux_extract YES
 -resource_sharing YES
+-complex_clken YES
 -iobuf YES
 -equivalent_register_removal YES
 -pld_mp YES
