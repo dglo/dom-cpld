@@ -7,7 +7,7 @@ Register 1: build number high byte
 Register 2: api version low byte
 Register 3: api version high byte
 
-Register 4: spi
+Register 4:
 
 Reset: 00000000 (shouldn't this be 11111111?)
 
@@ -18,7 +18,7 @@ Bit	 Read/Write	Description
 7        R/W		Temp Sensor SDA line (open drain).
 			  - misnamed as SC_nCS7 on schematic?
 
-Register 5: base
+Register 5:
 
 Reset: 11111111
 
@@ -28,7 +28,14 @@ Bit	 Read/Write	Description
 1	 R/W		Base CS 1
 2-7	 R/W		Unassigned
 
-Register 6: serial
+Register 6
+
+Reset: 0010x000
+
+Bit	 Read/Write	Description
+
+
+Register 6
 
 Reset: 0010x000
 
@@ -47,15 +54,14 @@ Bit    Read/Write	Description
 
 Notes: no bit 6 write function!
 
+
 Register 7
 
 Reset: 00000000
 
 Bit	 Read/Write	Description
 
-0        R              FPGA_LOADED (low active)
-1	 R/W		HV_DISABLE
-2-7	 R/W		Unassigned
+0-7	 R/W		Unassigned
 
 Register 8
 
@@ -74,8 +80,8 @@ Bit	 Read/Write	Description
 0	 R/W		Base_On_Off
 1	 R/W		FL_ON_OFF, Flash A/B select
 2	 R/W		Barometer_enable
-3	 R/W		Single_LED_ENABLE
-4	 R/W		FL_JTAGEN
+3	 R/W		Unassigned
+4	 R/W		FL_UNDEFINED
 5-7	 R/W		Unassigned
 
 Register 10
@@ -130,7 +136,7 @@ Reset: 00000000
 Bit	 Read/Write	Description
 
 0-7	 R		read as zero's
-0	 W		software reboot
+0	 W		enable reboot?
 
 Register 15
 
@@ -144,7 +150,3 @@ Bit	 Read/Write	Description
 4	 R		Conf_done
 6	 R		nReset
 7	 R		nStatus
-
-
-
-
