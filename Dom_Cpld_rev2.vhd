@@ -150,6 +150,7 @@ entity EB_Interface_rev2 is
         
         --PLD_Mode                : in STD_LOGIC;   -- normal High, jumper to Low, OR with Reg_15(1) to force reboot from flash memory
         Single_LED_ENABLE : out STD_LOGIC;
+        BASE_HV_DISABLE   : out STD_LOGIC;
         PLD_TP                  : in STD_LOGIC       -- Last port of the Entity
 
 
@@ -285,6 +286,7 @@ begin
         
         BASE_nCS0       <=      Reg_5 (0);
    	   BASE_nCS1       <=      Reg_5 (1);
+      BASE_HV_DISABLE <= Reg_7 (1);
 
         BASE_SClk       <=      Reg_6 (1);
         SC_SClk         <=      Reg_6 (1);              

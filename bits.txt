@@ -54,7 +54,8 @@ Reset: 00000000
 Bit	 Read/Write	Description
 
 0        R              FPGA_LOADED (low active)
-1-7	 R/W		Unassigned
+1	 R/W		HV_DISABLE
+2-7	 R/W		Unassigned
 
 Register 8
 
