@@ -1,10 +1,7 @@
-# DOM rev2_2 CPLD's Dom_Cpld_rev2_2.ucf file
+# DOM rev2 CPLD's Dom_Cpld_rev2_Test_02.ucf file
 #PINLOCK_BEGIN
 #Fri Feb 21 16:18:12 2003
 #Fri April 11 2003 change the driver strength of flash_noe, flash_nwe to FAST
-# This is the new UCF file from Arthur work at Wisconsin on June-02-03 which based on the
-# the Dom_Cpld_rev2_test_02.ucf file, and had been rename for the new revision.
-# 
 NET "base_miso" LOC = "S:PIN2";
 NET "conf_done" LOC = "S:PIN3";
 NET "ex_cts" LOC = "S:PIN32";
@@ -77,11 +74,22 @@ NET "flash_ncs1" LOC = "S:PIN77";
 NET "flash_noe" LOC = "S:PIN78";
 NET "flash_nwe" LOC = "S:PIN79";
 NET "flash_nwp" LOC = "S:PIN80";
+NET "fpga_pld_busy" LOC = "S:PIN59";
+NET "fpga_pld_noe" LOC = "S:PIN58";
+NET "fpga_pld_nwe" LOC = "S:PIN57";
 NET "int_ext_pin_n" LOC = "S:PIN56";
 NET "mux_en0" LOC = "S:PIN7";
 NET "mux_en1" LOC = "S:PIN12";
 NET "nconfig" LOC = "S:PIN54";
 NET "pld_tp" LOC = "S:PIN13";
+NET "fpga_pld_d<0>" LOC = "S:PIN60";
+NET "fpga_pld_d<1>" LOC = "S:PIN61";
+NET "fpga_pld_d<2>" LOC = "S:PIN64";
+NET "fpga_pld_d<3>" LOC = "S:PIN66";
+NET "fpga_pld_d<4>" LOC = "S:PIN68";
+NET "fpga_pld_d<5>" LOC = "S:PIN69";
+NET "fpga_pld_d<6>" LOC = "S:PIN70";
+NET "fpga_pld_d<7>" LOC = "S:PIN71";
 NET "rts_local" LOC = "S:PIN98";
 NET "rxd_local" LOC = "S:PIN111";
 NET "sc_cl" LOC = "S:PIN131";
