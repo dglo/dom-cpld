@@ -101,8 +101,8 @@ entity EB_Interface_rev2 is
         SC_MOSI         : out STD_LOGIC;
                 
 -- ADC Signals ( ADC_Sclk = DAC_Sclk; ADC_Din = DAC_Din)        
-        SC_nCS5         : out STD_LOGIC;
-        SC_nCS6         : out STD_LOGIC;
+        SC_nCS5         : inout STD_LOGIC;
+        SC_nCS6         : inout STD_LOGIC;
         SC_MISO         : IN STD_LOGIC;   -- changed from OUT to IN on 1/30/03 C.Vu
         
 -- BASE (High Voltage) Signals        
@@ -144,7 +144,9 @@ entity EB_Interface_rev2 is
       FPGA_PLD_BUSY   : inout STD_LOGIC;
    FPGA_PLD_D         : inout STD_LOGIC_VECTOR (7 downto 0);
 
--- Other Signals 
+-- Other Signals
+
+	EB_nPOR	: OUT STD_LOGIC; 
         
         AUX_CLT                 : inout STD_LOGIC;      -- Register 10-d6       ( this is only one direction and depend on what ext device)     
         
@@ -210,6 +212,8 @@ signal CPLD_Power_Up_nRESET_Done    		:std_logic;
   
 --**************************** Start ***************************************
 begin
+
+	EB_nPOR <= nPOR;
 
   inst_version : version
     port map (
@@ -281,12 +285,13 @@ begin
         SC_nCS2         <=      Reg_4 (2);
         SC_nCS3         <=      Reg_4 (3);
         SC_nCS4         <=      Reg_4 (4);
-        SC_nCS5         <=      Reg_4 (5);
-        SC_nCS6         <=      Reg_4 (6);
 
+        -- adc "chip selects" are open drain to support i2c...
+        SC_nCS5 <=  'Z' WHEN Reg_4(5)='1' ELSE '0';
+        SC_nCS6 <=  'Z' WHEN Reg_4(6)='1' ELSE '0';
         
-        BASE_nCS0               <=      Reg_5 (0);
-   BASE_nCS1            <=      Reg_5 (1);
+        BASE_nCS0       <=      Reg_5 (0);
+   	   BASE_nCS1       <=      Reg_5 (1);
 
         BASE_SClk       <=      Reg_6 (1);
         SC_SClk         <=      Reg_6 (1);              
@@ -300,8 +305,8 @@ begin
                 
 --      Base Signals
         
-        Mux_En0         <=      Reg_10 (0);     
-        Mux_En1         <=      Reg_10 (1);  
+        Mux_En0         <=      not Reg_10 (0);     
+        Mux_En1         <=      not Reg_10 (1);  
         Sel_A0          <=      Reg_10 (2);  
         Sel_A1          <=      Reg_10 (3); 
                 
@@ -607,11 +612,13 @@ begin
                         Reg_4      <=EBD_in;
                     else
                         -- uC read
-                        EBD_out(6 downto 0) <= Reg_4(6 downto 0);
+                        EBD_out(4 downto 0) <= Reg_4(4 downto 0);
+				    EBD_out(5) <= SC_nCS5;
+ 				    EBD_out(6) <= SC_nCS6;
                         EBD_out(7) <= SC_nCS7;
                     end if;
                 end if;
-                
+                				   
         -- Register 5
                 if Reg_enable = "0101"then
                     if EB_nWE = '0' then
