@@ -237,7 +237,8 @@ begin
 	FPGA_PLD_BUSY <= EB_nWE 	when (EB_nCS(2)= '0') 
 		else	'Z';
 
-	Reg_13 		  <=  FPGA_PLD_D	 when (EB_nCS(2)= '0');
+	Reg_13 		  <=  FPGA_PLD_D	 when (EB_nCS(2)= '0')
+		else	"ZZZZZZZZ";
 --==============================================================================
 
 
@@ -400,7 +401,7 @@ begin
         	if Reg_12(3) = '1' then
         		One_Wire_Count_Enable <= '1';
         	elsif (one_wire_counter = 1400 and Reg_12(2 downto 0) < "111" ) then
-          	One_Wire_Count_Enable <= '0'; 	-- stop count when other command
+          	One_Wire_Count_Enable <= '0'; 	-- stop count when command is not RESET
     		elsif one_wire_counter = 19200 then
              One_Wire_Count_Enable <= '0';   -- stop count when Reset command
      		end if;                                           
@@ -443,17 +444,16 @@ begin
               	if one_wire_counter = 11000 then
                   Reg_12(6) <= BASE_MISO; -- sampling the data line @ 550us for slave
               	end if;
-     			when others => null;
-  			end case;
+     	  when others => 
+			Reg_12(7) <= '0';
+  		end case;
           
          if one_wire_counter = 19200 then
-
+		   Reg_12(7) <= '0';
          end if ;
                                                         
---              Reg_12(7) <= '0';
---              elsif one_wire_counter = 19200 then
---              Reg_12(7) <= '1';
---              end if; 
+	else
+		Reg_12(7) <= '0'; 
     	end if;  -- One_Wire_Count_Enable = '1'                                           
     end if;    -- reset = RESET_ACTIVE    
 end process; 
@@ -644,11 +644,12 @@ begin
                  if Reg_enable = "1100"then
                     if EB_nWE = '0' then
                         -- uC write            
-                        Reg_12 (5 downto 0)   <=EBD_in (5 downto 0);
+                        Reg_12 (4 downto 0)   <=EBD_in (4 downto 0);
                     else
                         Reg_12 (3)   <='0'; -- allow only momentary write into this bit
                         -- uC read
---                        EBI_data_out <= Reg_12 ;  
+--                        EBI_data_out <= Reg_12 ;
+				    EBD_out(5) <= One_Wire_Count_Enable; -- status of 1-wire command busy bit (0=done, 1= busy)  
                         EBD_out(6) <= Reg_12 (6);              
                     end if;
                 end if;        
