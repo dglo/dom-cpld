@@ -1,7 +1,10 @@
-# DOM rev2 CPLD's Dom_Cpld_rev2_Test_02.ucf file
+# DOM rev2_2 CPLD's Dom_Cpld_rev2_2.ucf file
 #PINLOCK_BEGIN
 #Fri Feb 21 16:18:12 2003
 #Fri April 11 2003 change the driver strength of flash_noe, flash_nwe to FAST
+# This is the new UCF file from Arthur work at Wisconsin on June-02-03 which based on the
+# the Dom_Cpld_rev2_test_02.ucf file, and had been rename for the new revision.
+# 
 NET "base_miso" LOC = "S:PIN2";
 NET "conf_done" LOC = "S:PIN3";
 NET "ex_cts" LOC = "S:PIN32";
