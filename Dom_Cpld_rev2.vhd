@@ -3,6 +3,17 @@
 --	Version	:	1
 --		Rev	:	0	Date: Feb-18-2003
 --	     			(This is the modification of code in Ice_cube3 project on Feb-18-03)
+--
+--    Rev	:	1	Date: April-16-2003
+--			- Add by Thorsten on ~ 4-11-03)
+--	     		 1) SC_nCS7   <=  'Z' WHEN Reg_4(7)='1' ELSE '0';   
+--				 2) Reg_4(7) in read register	
+--			- Add by Chinh on ~ 4-16-03)						
+--				 3) nCONFIG_pulse: process  the if statement are reversed order to alway clear the counter
+--			- Add by Chinh on ~ 4-17-03)						
+--				 4) Add nCONFIG_delay: to delay the start of nCONFIG pulse 
+--				 5) change nCONFIG <= --------------------							 	 
+--  
 -- 	Documentations used:	
 --		--Dom Schematics (V11.0)
 --		--Excalibur devices Hardware Reference Manual pages (91-96)
@@ -166,10 +177,11 @@ signal Reg_14  	: std_logic_vector(7 downto 0);	-- Reboot control register
 signal Reg_15  	: std_logic_vector(7 downto 0);	-- Boot configuration register
 
 signal EBD_in  	: std_logic_vector(7 downto 0); 
-signal EBD_out  : std_logic_vector(7 downto 0);
-signal Reset			:std_logic;
+signal EBD_out  	: std_logic_vector(7 downto 0);
+signal Reset		:std_logic;
 signal CPU_Reboot_Pulse 	:std_logic;
-signal count  			: unsigned(3 downto 0);
+signal count  		: unsigned(3 downto 0);
+signal SW_reboot 	:std_logic; -- to delay the nConfig signal 
 
 --**************************** Start ***************************************
 begin
@@ -214,7 +226,7 @@ begin
 ------
 --	SC_nCS7   <=  Reg_8(1)   	when (Reg_8(2) = '1')  else 'Z';
 --	Reg_8(1)  <=  SC_nCS7 	when (Reg_8(2) = '0')  else '0';
-	SC_nCS7   <=  'Z' WHEN Reg_4(7)='1' ELSE '0';
+	SC_nCS7   <=  'Z' WHEN Reg_4(7)='1' ELSE '0';  -- add by Thorsten on ~ 4-11-03
 ------
 	AUX_CLT   <=  Reg_10(7)   	when (Reg_10(6) = '1')  else 'Z';		-- Write
 	Reg_10(7)  <=  AUX_CLT 	when (Reg_10(6) = '0')  else '0';	-- Read as default
@@ -278,7 +290,8 @@ begin
 	 else 	 '1' ;
 	
 	Boot_Flash     <=	Reg_15(1) or (not PLD_Mode) ;	-- Register 15-d1     
-	nConfig		<= '0' 	when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';	-- Register 15-d3
+--	nConfig		<= '0' 	when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';	-- Register 15-d3
+	nConfig		<= '0' 	when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';	-- Register 15-d3
    Reset			<=	nPOR;
 
    Int_Ext_pin_n  <=  '1';   	
@@ -302,7 +315,7 @@ begin
     end process; 
 
 --************************** nCONFIG pulse width ***********************************
--- This process extend the nCONFIG pulse
+-- This process to setup the nCONFIG pulse
 nCONFIG_pulse: process (reset, PLD_Clk)
 begin
     if reset = RESET_ACTIVE then 
@@ -331,13 +344,31 @@ begin
     		count <= "0000";       
         -- Synchronize with falling edge of clock
     elsif PLD_Clk'event and (PLD_Clk = '0') then
-    		if Reg_15(3) = '0' then
+    	if Reg_15(3) = '0' then
 			count <= count + 1;
 		else
 			count <= "0000";
 		end if;		                                  
     end if;        
 end process; 
+
+--************************** nCONFIG delay ***********************************
+-- This process to delay the nCONFIG pulse
+nConfig_delay: process (reset, PLD_Clk, count)
+begin
+    if reset = RESET_ACTIVE then 
+    		SW_reboot <= '0';       
+        -- Synchronize with falling edge of clock
+    elsif PLD_Clk'event and (PLD_Clk = '0') then
+			if count > 5 then
+				SW_reboot <= '1';
+			else
+				SW_reboot <= '0';
+			end if;                                  
+    end if;        
+end process; 
+
+
 --************************** Read/Write to Register **********************************
 -- This process Write to or Read from registers
 
