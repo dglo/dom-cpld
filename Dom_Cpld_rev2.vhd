@@ -238,7 +238,7 @@ begin
         else    '1'           when (Reg_9(1) ='1' and EB_nCS(3)= '1')
         else    'Z';
    
-        FL_ON_OFF       <=  Reg_9(1);
+        FL_ON_OFF       <=  Reg_9(1) when (nConfig = '1') else '0';
         FL_JTAGEN     <=  Reg_9(4);
 
 -- FPGA & CPLD bus temporary logic for compiling purpose only Feb-19-03 
