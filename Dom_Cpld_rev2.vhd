@@ -64,7 +64,12 @@ entity EB_Interface_rev2 is
    nSTATUS         		: in STD_LOGIC; -- from CPU to R15-d7
    nPOR                 : inout STD_LOGIC; --reg_14 power on reset switch
    soft_reset  			: in STD_LOGIC;  -- normal High, push to Low, OR with Reg_14(0) to force nCONFIG down 
-          
+
+-- for rev 3 boards
+   -- FPGA_LOADED : in STD_LOGIC; -- pin 75, from CPU, is the fpga loaded? (active low)
+   -- COMM_RESET : in STD_LOGIC;  -- pin 81, from CPU, is there a comm reset? (active low)
+
+   
 -- Barometer        
    Barometer_Enable     : out STD_LOGIC;                -- Register 9-d2
          
@@ -328,6 +333,10 @@ begin
         Boot_Flash     <=       Reg_15(1) or (not PLD_Mode) ;   -- Register 15-d1     
 --      nConfig         <= '0'  when ( ( not Reg_15(3) and Reg_15(1)) = '1') else 'Z';  -- Register 15-d3
 --      nConfig         <= '0'  when ( ( SW_reboot and Reg_15(1)) = '1') else 'Z';      -- Register 15-d3
+
+--     for rev 3 boards
+--     nConfig         <= '0'  when ( SW_reboot = '1' or COMM_RESET = '0' ) else 'Z';
+  
        nConfig         <= '0'  when ( SW_reboot = '1' or FPGA_PLD_D(6) = '0' ) else 'Z';      -- Register 15-d3
     Reset                        <=      nPOR;
 
@@ -634,10 +643,13 @@ begin
                  if Reg_enable = "0111"then
                     if EB_nWE = '0' then
                         -- uC write 
-                        Reg_7   <= EBD_in;              
+                        Reg_7 (7 downto 1)   <= EBD_in (7 downto 1);
                     else
                         -- uC read
-                        EBD_out <= Reg_7;              
+                        EBD_out (7 downto 1) <= Reg_7 (7 downto 1);
+
+                    -- for rev 3 boards
+                    -- EBD_out(0) <= FPGA_LOADED;
                     end if;
                 end if;
                 
