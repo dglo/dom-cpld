@@ -373,7 +373,7 @@ begin
 --   		elsif (Reg_15(1) and  (Reg_14(0) or not soft_reset)) = '1' then
    		elsif (Reg_14(0) or not soft_reset) = '1' then
             Reg_15(3) <= '0';
-            Reg_9(1) <= '0';            -- make sure the fl_on_off is off on reset
+       --     Reg_9(1) <= '0';            -- make sure the fl_on_off is off on reset
    		end if;                                                           
     end if;        
 end process;             
