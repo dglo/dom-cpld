@@ -1,3 +1,2 @@
-pld-version.h
 # Ignore Subversion directory during Git transition
 .svn
