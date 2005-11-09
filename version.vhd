@@ -34,6 +34,6 @@ ARCHITECTURE arch_version OF version IS
 BEGIN  -- arch_version
 
     --- this line is automatically updated, don't edit it...
-    vsn <= conv_std_logic_vector (0 , 32);
+    vsn <= conv_std_logic_vector (262173 , 32);
 
 END arch_version;
