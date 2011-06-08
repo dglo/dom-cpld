@@ -1,0 +1,26 @@
+set -tmpdir __projnav
+set -xsthdpdir ./xst
+run
+-ifn eb_interface_rev2.prj
+-ifmt VHDL
+-ofn eb_interface_rev2
+-ofmt NGC
+-p xbr
+-ent eb_interface_rev2
+-opt_mode Speed
+-opt_level 1
+-iuc NO
+-keep_hierarchy YES
+-rtlview Yes
+-hierarchy_separator _
+-bus_delimiter <>
+-case lower
+-fsm_extract YES -fsm_encoding Auto
+-mux_extract YES
+-resource_sharing YES
+-iobuf YES
+-equivalent_register_removal YES
+-pld_mp YES
+-pld_xp YES
+-pld_ce YES
+-wysiwyg NO
